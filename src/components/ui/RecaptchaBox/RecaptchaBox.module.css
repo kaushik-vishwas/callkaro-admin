@@ -1,0 +1,46 @@
+.box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 74px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #f9fafb;
+}
+
+.left {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--color-brand);
+  cursor: pointer;
+}
+
+.brand {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.logo {
+  font-size: 11px;
+  font-weight: 800;
+  color: #5f6368;
+  letter-spacing: 0.02em;
+}
+
+.meta {
+  font-size: 9px;
+  color: #9aa0a6;
+}

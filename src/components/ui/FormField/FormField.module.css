@@ -1,0 +1,70 @@
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-field);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.control:focus-within {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-brand-ring);
+}
+
+.invalid {
+  border-color: var(--color-danger);
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.rightSlot {
+  display: grid;
+  place-items: center;
+  padding-right: 10px;
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

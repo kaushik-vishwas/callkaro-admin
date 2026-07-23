@@ -1,0 +1,138 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 18px 18px 14px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.swatchCall {
+  background: var(--color-brand);
+}
+
+.swatchOnline {
+  background: var(--color-chart-online);
+}
+
+.swatchIdle {
+  background: var(--color-chart-idle);
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.chartBlock {
+  min-width: 0;
+}
+
+.chartTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.grid {
+  stroke: #eef1f5;
+  stroke-width: 1;
+}
+
+.axis {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+  text-anchor: end;
+  font-family: var(--font-sans);
+}
+
+.xLabel {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+  text-anchor: middle;
+  font-family: var(--font-sans);
+}
+
+.call {
+  fill: var(--color-brand);
+}
+
+.online {
+  fill: var(--color-chart-online);
+}
+
+.idle {
+  fill: var(--color-chart-idle);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.footer p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.footer strong {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}

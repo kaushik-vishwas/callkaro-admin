@@ -1,0 +1,68 @@
+.form {
+  display: grid;
+  gap: 18px;
+}
+
+.emailHint {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.emailHint strong {
+  color: var(--color-text);
+}
+
+.meta {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.timer {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.expired {
+  color: var(--color-danger);
+}
+
+.resend {
+  border: 0;
+  background: transparent;
+  color: var(--color-brand);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+}
+
+.resend:hover {
+  text-decoration: underline;
+}
+
+.error {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.cancel {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.cancel:hover {
+  color: var(--color-brand);
+}

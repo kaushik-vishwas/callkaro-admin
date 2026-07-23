@@ -1,0 +1,16 @@
+.wrap {
+  max-width: 640px;
+  padding: 40px 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+}

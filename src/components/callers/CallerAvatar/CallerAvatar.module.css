@@ -1,0 +1,46 @@
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+
+.md {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
+
+.lg {
+  width: 72px;
+  height: 72px;
+  font-size: 28px;
+}
+
+.pink {
+  background: linear-gradient(135deg, #ff6b9d, #ff2d78);
+}
+
+.violet {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.teal {
+  background: linear-gradient(135deg, #2dd4bf, #0d9488);
+}
+
+.amber {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+.blue {
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+}

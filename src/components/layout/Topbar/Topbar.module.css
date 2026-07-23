@@ -1,0 +1,163 @@
+.topbar {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.menuBtn {
+  display: none;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.search {
+  flex: 1;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--color-field);
+  border: 1px solid transparent;
+}
+
+.search:focus-within {
+  border-color: var(--color-brand-ring);
+  background: #fff;
+}
+
+.searchIcon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.search input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: var(--color-text);
+}
+
+.search input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.btnAgent,
+.btnReceiver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.btnAgent {
+  background: var(--color-accent);
+}
+
+.btnAgent:hover {
+  filter: brightness(0.96);
+}
+
+.btnReceiver {
+  background: var(--color-brand);
+}
+
+.btnReceiver:hover {
+  background: var(--color-brand-hover);
+}
+
+.iconBtn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  color: var(--color-text);
+  background: #f9fafb;
+}
+
+.dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  border: 1.5px solid #fff;
+}
+
+.userBtn {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #ff6b9d, #ff2d78);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .btnAgent span,
+  .btnReceiver {
+    font-size: 12px;
+  }
+
+  .search {
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 960px) {
+  .menuBtn {
+    display: inline-grid;
+  }
+
+  .btnAgent,
+  .btnReceiver {
+    display: none;
+  }
+
+  .search {
+    max-width: none;
+  }
+}

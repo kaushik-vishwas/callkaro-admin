@@ -1,0 +1,64 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-page);
+}
+
+.desktopSidebar {
+  flex-shrink: 0;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: 24px;
+}
+
+.mobileOverlay {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .desktopSidebar {
+    display: none;
+  }
+
+  .mobileOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+  }
+
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(17, 24, 39, 0.4);
+    cursor: pointer;
+  }
+
+  .mobileSidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-width);
+    background: #fff;
+    box-shadow: 8px 0 30px rgba(17, 24, 39, 0.12);
+  }
+
+  .mobileSidebar :global(aside) {
+    display: grid;
+    height: 100%;
+  }
+
+  .content {
+    padding: 16px;
+  }
+}
