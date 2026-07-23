@@ -8,7 +8,6 @@ import {
   Download,
   Play,
   Shield,
-  X,
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {
@@ -153,6 +152,7 @@ export function ReceiverKycPage() {
                 disabled={busy}
                 onClick={() =>
                   void runAction(async () => {
+                    if (!profile || !kyc) return;
                     if (kyc.reviewStatus !== 'approved') {
                       await approveReceiver(profile.id);
                     }
