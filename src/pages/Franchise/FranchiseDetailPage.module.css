@@ -1,0 +1,349 @@
+.page {
+  display: grid;
+  gap: 16px;
+  max-width: 1100px;
+}
+
+.top {
+  display: grid;
+  gap: 4px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: var(--color-brand);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+
+.title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.card,
+.profileCard {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+}
+
+.profileCard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.profileMain {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.meta {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.profileActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btnOutline,
+.btnWarn,
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btnOutline {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+}
+
+.btnWarn {
+  border: 0;
+  background: #f59e0b;
+  color: #fff;
+}
+
+.btnDanger {
+  border: 0;
+  background: #ef4444;
+  color: #fff;
+}
+
+.cardTitle {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.infoGrid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.infoGrid dt {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.infoGrid dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bankVerified,
+.bankPending {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bankVerified {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.bankPending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.perfGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.perfGrid article {
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.perfGrid p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.perfGrid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.opsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.opsGrid article {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.opsGrid p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.opsGrid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.opsGreen {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.opsRed {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.opsGold {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.docsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.docCard {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.docHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.docHead h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.docMeta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.docActions {
+  display: flex;
+  gap: 8px;
+}
+
+.docBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.manageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.manageWarn,
+.manageSuccess,
+.manageNeutral {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.manageWarn {
+  border: 0;
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.manageSuccess {
+  border: 0;
+  background: #d1fae5;
+  color: #047857;
+}
+
+.manageNeutral {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+}
+
+@media (max-width: 960px) {
+  .infoGrid,
+  .opsGrid,
+  .docsGrid,
+  .manageGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .perfGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .infoGrid,
+  .opsGrid,
+  .docsGrid,
+  .manageGrid,
+  .perfGrid {
+    grid-template-columns: 1fr;
+  }
+}

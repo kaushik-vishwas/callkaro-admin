@@ -1,0 +1,47 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status_open {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.status_resolved {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.type_caller {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.type_receiver {
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+}
+
+.type_agent {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+}

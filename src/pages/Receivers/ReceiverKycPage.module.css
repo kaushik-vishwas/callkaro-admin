@@ -122,6 +122,44 @@
   font-weight: 800;
 }
 
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cardHead .cardTitle {
+  margin: 0;
+}
+
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #047857;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.agentLink {
+  display: inline-flex;
+  margin-top: 12px;
+  color: var(--color-brand);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.agentLink:hover {
+  text-decoration: underline;
+}
+
 .infoGrid {
   margin: 0;
   display: grid;

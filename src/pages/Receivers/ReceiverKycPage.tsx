@@ -1,18 +1,23 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Link, Navigate, useNavigate, useParams} from 'react-router-dom';
+import {
+  Link,
+  Navigate,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   ArrowLeft,
-  Check,
   CircleCheck,
   CircleMinus,
   Download,
   Play,
-  Shield,
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {
   approveReceiver,
   fetchReceiver,
+  formatInr,
   rejectReceiver,
   type AdminReceiverProfile,
 } from '../../api/receivers';
@@ -21,6 +26,8 @@ import styles from './ReceiverKycPage.module.css';
 
 export function ReceiverKycPage() {
   const {receiverId = ''} = useParams();
+  const [searchParams] = useSearchParams();
+  const fromVerification = searchParams.get('from') === 'verification';
   const navigate = useNavigate();
   const [profile, setProfile] = useState<AdminReceiverProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,11 +70,24 @@ export function ReceiverKycPage() {
   }, [rejectOpen]);
 
   if (notFound) {
-    return <Navigate to="/receivers" replace />;
+    return (
+      <Navigate
+        to={fromVerification ? '/verification' : '/receivers'}
+        replace
+      />
+    );
   }
 
   const kyc = profile?.kyc;
-  const canReview = Boolean(profile && kyc);
+  const canReview = Boolean(profile && kyc && kyc.reviewStatus === 'pending');
+  const backTo = fromVerification
+    ? '/verification'
+    : profile
+      ? `/receivers/${profile.id}`
+      : '/receivers';
+  const backLabel = fromVerification
+    ? 'Back to Approvals'
+    : 'Back to Receiver Profile';
 
   async function runAction(fn: () => Promise<void>) {
     setBusy(true);
@@ -92,42 +112,18 @@ export function ReceiverKycPage() {
     await runAction(async () => {
       await rejectReceiver(profile.id, rejectReason.trim());
       setRejectOpen(false);
-      navigate('/verification');
+      navigate(fromVerification ? '/verification' : `/receivers/${profile.id}`);
     });
   }
-
-  const checks = kyc
-    ? [
-        {
-          label: 'Profile Complete',
-          done: Boolean(profile?.name && kyc.bio),
-        },
-        {
-          label: 'Photos Uploaded',
-          done: kyc.photos.length > 0,
-        },
-        {
-          label: 'KYC Documents',
-          done: kyc.documents.length > 0,
-        },
-        {
-          label: 'Bank Verified',
-          done: Boolean(kyc.bank.accountNumber || kyc.bank.upiId),
-        },
-      ]
-    : [];
 
   return (
     <DashboardShell>
       <div className={styles.page}>
         <div className={styles.topBar}>
           <div>
-            <Link
-              to={profile ? `/receivers/${profile.id}` : '/receivers'}
-              className={styles.back}
-            >
+            <Link to={backTo} className={styles.back}>
               <ArrowLeft size={15} strokeWidth={2.5} />
-              Back to Receiver Profile
+              {backLabel}
             </Link>
             <h1 className={styles.title}>Review Receiver Profile</h1>
             <p className={styles.subtitle}>
@@ -152,10 +148,8 @@ export function ReceiverKycPage() {
                 disabled={busy}
                 onClick={() =>
                   void runAction(async () => {
-                    if (!profile || !kyc) return;
-                    if (kyc.reviewStatus !== 'approved') {
-                      await approveReceiver(profile.id);
-                    }
+                    if (!profile) return;
+                    await approveReceiver(profile.id);
                     navigate(`/receivers/${profile.id}/approved`);
                   })
                 }
@@ -174,7 +168,10 @@ export function ReceiverKycPage() {
           <div className={styles.layout}>
             <div className={styles.left}>
               <section className={styles.card}>
-                <h2 className={styles.cardTitle}>Basic Information</h2>
+                <div className={styles.cardHead}>
+                  <h2 className={styles.cardTitle}>Basic Information</h2>
+                  <span className={styles.verifiedBadge}>Verified by Agent</span>
+                </div>
                 <dl className={styles.infoGrid}>
                   <div>
                     <dt>Name</dt>
@@ -261,24 +258,6 @@ export function ReceiverKycPage() {
 
             <div className={styles.right}>
               <section className={styles.card}>
-                <h2 className={styles.cardTitle}>Verification Status</h2>
-                <ul className={styles.checkList}>
-                  {checks.map(item => (
-                    <li key={item.label}>
-                      <span
-                        className={
-                          item.done ? styles.checkDone : styles.checkPending
-                        }
-                      >
-                        <Check size={12} strokeWidth={3} />
-                      </span>
-                      {item.label}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section className={styles.card}>
                 <h2 className={styles.cardTitle}>Submission Info</h2>
                 <dl className={styles.kv}>
                   <div>
@@ -314,6 +293,32 @@ export function ReceiverKycPage() {
                     </dd>
                   </div>
                 </dl>
+              </section>
+
+              <section className={styles.card}>
+                <h2 className={styles.cardTitle}>Agent Information</h2>
+                <dl className={styles.kv}>
+                  <div>
+                    <dt>Agent</dt>
+                    <dd>{profile.agentName || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Agent ID</dt>
+                    <dd>{profile.agentCode || profile.agentId || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Commission</dt>
+                    <dd>{formatInr(profile.agentCommission || 0)}</dd>
+                  </div>
+                </dl>
+                {profile.agentId ? (
+                  <Link
+                    to={`/agents/${profile.agentId}`}
+                    className={styles.agentLink}
+                  >
+                    View Agent Profile
+                  </Link>
+                ) : null}
               </section>
 
               <section className={styles.card}>
@@ -383,11 +388,6 @@ export function ReceiverKycPage() {
                   </ul>
                 )}
               </section>
-
-              <div className={styles.secureNote}>
-                <Shield size={14} />
-                All information is encrypted and reviewed confidentially.
-              </div>
             </div>
           </div>
         ) : null}

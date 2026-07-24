@@ -1,15 +1,21 @@
 .page {
   display: grid;
   gap: 16px;
-  max-width: 1280px;
+  max-width: 1400px;
 }
 
 .header {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-start;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .title {
@@ -25,6 +31,7 @@
   color: var(--color-text-secondary);
 }
 
+.createBtn,
 .exportBtn {
   display: inline-flex;
   align-items: center;
@@ -32,13 +39,32 @@
   height: 40px;
   padding: 0 14px;
   border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: #fff;
-  color: var(--color-text);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
+}
+
+.createBtn {
+  border: 0;
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.createBtn:hover {
+  background: var(--color-brand-hover);
+}
+
+.exportBtn {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .panel {
@@ -51,7 +77,7 @@
 
 .toolbar {
   display: grid;
-  grid-template-columns: 1.5fr 0.9fr 0.9fr;
+  grid-template-columns: 1.4fr 0.9fr 0.8fr 0.8fr;
   gap: 10px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--color-border);
@@ -62,7 +88,7 @@
   align-items: center;
   gap: 10px;
   height: 42px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: 10px;
   background: #f3f4f6;
   color: var(--color-text-muted);
@@ -77,7 +103,8 @@
   font-size: 13.5px;
 }
 
-.filter {
+.selectField,
+.dateField {
   display: grid;
   gap: 4px;
   font-size: 11px;
@@ -87,7 +114,8 @@
   letter-spacing: 0.04em;
 }
 
-.filter select {
+.selectField select,
+.dateField input {
   height: 42px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
@@ -95,22 +123,7 @@
   background: #fff;
   color: var(--color-text);
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
   font-family: inherit;
-}
-
-.filter select:focus {
-  outline: none;
-  border-color: var(--color-brand);
-}
-
-.error {
-  margin: 0;
-  padding: 12px 16px;
-  color: #b91c1c;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .tableWrap {
@@ -120,7 +133,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 820px;
+  min-width: 980px;
 }
 
 .table th {
@@ -133,6 +146,7 @@
   color: var(--color-text-muted);
   background: #f9fafb;
   border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
 }
 
 .table td {
@@ -140,51 +154,43 @@
   font-size: 13px;
   color: var(--color-text);
   border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
+  white-space: nowrap;
 }
 
-.receiverCell {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+.table tbody tr:hover {
+  background: #fafafa;
 }
 
-.receiverName {
-  display: block;
-  font-size: 14px;
+.code {
+  font-weight: 700;
+  color: var(--color-brand);
+}
+
+.strong {
   font-weight: 700;
 }
 
-.receiverId {
-  display: block;
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.meta {
-  display: block;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-.reviewBtn {
+.rowActions {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 34px;
-  padding: 0 14px;
-  border: 0;
+  gap: 6px;
+}
+
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  background: var(--color-brand);
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-secondary);
+  text-decoration: none;
 }
 
-.reviewBtn:hover {
-  background: var(--color-brand-hover);
+.iconBtn:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand-ring);
+  background: var(--color-brand-soft);
 }
 
 .empty {
@@ -193,7 +199,18 @@
   padding: 28px 14px !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
+  .statGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .statGrid,
   .toolbar {
     grid-template-columns: 1fr;
   }

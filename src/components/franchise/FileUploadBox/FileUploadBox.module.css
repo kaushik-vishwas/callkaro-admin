@@ -1,0 +1,47 @@
+.box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 120px;
+  padding: 16px;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  text-align: center;
+  font: inherit;
+  color: var(--color-text);
+}
+
+.box:hover {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-brand);
+  border: 1px solid var(--color-border);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  max-width: 160px;
+  line-height: 1.4;
+}
+
+.input {
+  display: none;
+}

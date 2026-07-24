@@ -1,0 +1,521 @@
+.page {
+  display: grid;
+  gap: 16px;
+  max-width: 1400px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  max-width: 560px;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.range select {
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--color-text);
+}
+
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.panelSubtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.panelActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.segment {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #f3f4f6;
+}
+
+.segmentBtn {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.segmentActive {
+  background: #fff;
+  color: var(--color-brand);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.kpiCard {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--shadow-card);
+  border-bottom-width: 3px;
+}
+
+.kpiLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.kpiValue {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.tone_pink {
+  border-bottom-color: var(--color-brand);
+}
+.tone_pink .kpiValue {
+  color: var(--color-brand);
+}
+.tone_purple {
+  border-bottom-color: #8b5cf6;
+}
+.tone_purple .kpiValue {
+  color: #7c3aed;
+}
+.tone_blue {
+  border-bottom-color: #3b82f6;
+}
+.tone_blue .kpiValue {
+  color: #2563eb;
+}
+.tone_green {
+  border-bottom-color: #10b981;
+}
+.tone_green .kpiValue {
+  color: #059669;
+}
+.tone_gold {
+  border-bottom-color: #f59e0b;
+}
+.tone_gold .kpiValue {
+  color: #d97706;
+}
+.tone_dark {
+  border-bottom-color: #111827;
+}
+.tone_dark .kpiValue {
+  color: #111827;
+}
+
+.trendUp {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #059669;
+}
+
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr 0.9fr;
+  gap: 14px;
+}
+
+.chartWrap {
+  padding: 8px 12px 16px;
+}
+
+.chartSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chartLabel {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+  text-anchor: middle;
+  font-weight: 600;
+}
+
+.axisLabel {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.activityList {
+  list-style: none;
+  margin: 0;
+  padding: 8px 16px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.activityItem {
+  display: grid;
+  gap: 2px;
+}
+
+.activityText {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.activityTime {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.packageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.packageCard {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.packagePrice {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.packageCoins {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.packageRevenue {
+  margin: 14px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-brand);
+}
+
+.buyersBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: #f9fafb;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f5f9;
+  white-space: nowrap;
+}
+
+.rank {
+  font-weight: 800;
+  color: var(--color-brand);
+}
+
+.strong {
+  font-weight: 700;
+}
+
+.growthPos {
+  color: #059669;
+  font-weight: 700;
+}
+
+.agentsLayout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 14px;
+}
+
+.breakdownList {
+  margin: 0;
+  padding: 8px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.breakdownRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+}
+
+.breakdownRow:last-child {
+  border-bottom: 0;
+}
+
+.breakdownMeta {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.commissionBar {
+  margin: 8px 16px 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #1e3a8a;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.grossTop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.grossBig {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+}
+
+.grossBigLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.grossBigValue {
+  margin: 10px 0 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.grossCharts {
+  display: grid;
+  grid-template-columns: 0.9fr 1.3fr;
+  gap: 14px;
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.legendItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.legendLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.netKpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.netKpi {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px;
+  background: #fafafa;
+}
+
+.netKpiLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.netKpiValue {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.waterfallLabels {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 12px 16px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.waterfallNeg {
+  color: #dc2626;
+}
+
+.waterfallPos {
+  color: var(--color-brand);
+}
+
+@media (max-width: 1200px) {
+  .kpiGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .chartsRow,
+  .agentsLayout,
+  .grossCharts,
+  .packageGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  .kpiGrid,
+  .netKpis,
+  .grossTop {
+    grid-template-columns: 1fr;
+  }
+}
