@@ -11,6 +11,7 @@ import {
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
 import {ReceiverStatusBadge} from '../../components/receivers/ReceiverStatusBadge/ReceiverStatusBadge';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
 import {
   fetchReceiverStats,
   fetchReceivers,
@@ -279,8 +280,8 @@ export function ReceiversPage() {
               <tbody>
                 {!loading && rows.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className={styles.empty}>
-                      No receivers found.
+                    <td colSpan={10} className={styles.emptyCell}>
+                      <EmptyTableState label="No receivers found." />
                     </td>
                   </tr>
                 ) : null}

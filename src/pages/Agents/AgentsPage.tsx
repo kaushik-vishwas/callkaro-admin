@@ -14,6 +14,7 @@ import {DashboardShell} from '../../components/layout/DashboardShell/DashboardSh
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
 import {AgentStatusBadge} from '../../components/agents/AgentStatusBadge/AgentStatusBadge';
 import {CreateAgentModal} from '../../components/agents/CreateAgentModal/CreateAgentModal';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
 import {
   fetchAgentStats,
   fetchAgents,
@@ -272,8 +273,8 @@ export function AgentsPage() {
               <tbody>
                 {!loading && rows.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className={styles.empty}>
-                      No agents found. Create one to get started.
+                    <td colSpan={9} className={styles.emptyCell}>
+                      <EmptyTableState label="No agents found. Create one to get started." />
                     </td>
                   </tr>
                 ) : null}

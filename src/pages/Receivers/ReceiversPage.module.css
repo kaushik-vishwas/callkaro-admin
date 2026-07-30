@@ -262,6 +262,11 @@
   font-size: 13px;
 }
 
+.emptyCell {
+  padding: 0 !important;
+  border-bottom: 0 !important;
+}
+
 .tableWrap {
   overflow: auto;
   border: 1px solid var(--color-border);

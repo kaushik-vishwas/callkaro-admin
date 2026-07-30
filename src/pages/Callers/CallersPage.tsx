@@ -5,6 +5,7 @@ import {DashboardShell} from '../../components/layout/DashboardShell/DashboardSh
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
 import {StatusBadge} from '../../components/callers/StatusBadge/StatusBadge';
 import {VipBadge} from '../../components/callers/VipBadge/VipBadge';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
 import {
   fetchCallerStats,
   fetchCallers,
@@ -253,8 +254,8 @@ export function CallersPage() {
               <tbody>
                 {!loading && rows.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className={styles.empty}>
-                      No callers found.
+                    <td colSpan={10} className={styles.emptyCell}>
+                      <EmptyTableState label="No callers found." />
                     </td>
                   </tr>
                 ) : null}

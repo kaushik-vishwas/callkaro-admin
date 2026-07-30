@@ -216,6 +216,11 @@
   padding: 28px 14px !important;
 }
 
+.emptyCell {
+  padding: 0 !important;
+  border-bottom: 0 !important;
+}
+
 .pagination {
   display: flex;
   flex-wrap: wrap;

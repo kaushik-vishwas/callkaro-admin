@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
 import {
   formatInr,
   formatNumber,
@@ -207,8 +208,8 @@ export function WithdrawalsPage() {
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className={styles.empty}>
-                      No withdrawal requests match your filters.
+                    <td colSpan={5} className={styles.emptyCell}>
+                      <EmptyTableState label="No withdrawal requests match your filters." />
                     </td>
                   </tr>
                 ) : null}

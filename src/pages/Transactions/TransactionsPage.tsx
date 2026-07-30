@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
 import {
   formatInr,
   formatNumber,
@@ -203,8 +204,8 @@ export function TransactionsPage() {
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className={styles.empty}>
-                      No transactions match your filters.
+                    <td colSpan={7} className={styles.emptyCell}>
+                      <EmptyTableState label="No transactions match your filters." />
                     </td>
                   </tr>
                 ) : null}

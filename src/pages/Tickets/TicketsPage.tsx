@@ -4,6 +4,7 @@ import {DashboardShell} from '../../components/layout/DashboardShell/DashboardSh
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
 import {TicketStatusBadge} from '../../components/tickets/TicketBadge/TicketBadge';
 import {TicketDetailsModal} from '../../components/tickets/TicketDetailsModal/TicketDetailsModal';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
 import {
   TICKETS,
   TICKET_STATS,
@@ -185,8 +186,8 @@ export function TicketsPage() {
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className={styles.empty}>
-                      No tickets match your filters.
+                    <td colSpan={7} className={styles.emptyCell}>
+                      <EmptyTableState label="No tickets match your filters." />
                     </td>
                   </tr>
                 ) : null}
