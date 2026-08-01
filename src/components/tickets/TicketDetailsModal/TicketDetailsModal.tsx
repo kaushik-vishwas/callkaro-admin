@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
 import {Download, FileText, Film, Image, X} from 'lucide-react';
 import {
   TicketCategoryTag,
