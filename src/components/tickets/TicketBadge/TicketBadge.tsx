@@ -2,9 +2,11 @@ import type {TicketStatus, TicketUserType} from '../../../data/tickets';
 import styles from './TicketBadge.module.css';
 
 export function TicketStatusBadge({status}: {status: TicketStatus}) {
+  const label =
+    status === 'open' ? 'Open' : status === 'ignored' ? 'Ignored' : 'Resolved';
   return (
     <span className={[styles.badge, styles[`status_${status}`]].join(' ')}>
-      {status === 'open' ? 'Open' : 'Resolved'}
+      {label}
     </span>
   );
 }

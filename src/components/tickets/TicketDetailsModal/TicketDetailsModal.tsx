@@ -5,16 +5,16 @@ import {
   TicketStatusBadge,
   TicketUserTypeBadge,
 } from '../TicketBadge/TicketBadge';
-import type {TicketItem, TicketStatus} from '../../../data/tickets';
+import type {TicketItem} from '../../../api/reports';
 import styles from './TicketDetailsModal.module.css';
 
 type TicketDetailsModalProps = {
   ticket: TicketItem;
+  busy?: boolean;
+  error?: string;
   onClose: () => void;
-  onSave: (next: {
-    status: TicketStatus;
-    assignedToAdmin: boolean;
-  }) => void;
+  onIgnore: () => void;
+  onTerminate: () => void;
 };
 
 function AttachmentIcon({type}: {type: TicketItem['attachments'][number]['type']}) {
@@ -25,16 +25,13 @@ function AttachmentIcon({type}: {type: TicketItem['attachments'][number]['type']
 
 export function TicketDetailsModal({
   ticket,
+  busy = false,
+  error = '',
   onClose,
-  onSave,
+  onIgnore,
+  onTerminate,
 }: TicketDetailsModalProps) {
-  const [status, setStatus] = useState<TicketStatus>(ticket.status);
-  const [assignedToAdmin, setAssignedToAdmin] = useState(ticket.assignedToAdmin);
-
-  useEffect(() => {
-    setStatus(ticket.status);
-    setAssignedToAdmin(ticket.assignedToAdmin);
-  }, [ticket]);
+  const isOpen = ticket.status === 'open';
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -56,17 +53,14 @@ export function TicketDetailsModal({
         <header className={styles.header}>
           <div>
             <h2 id="ticket-details-title" className={styles.title}>
-              Ticket Details {ticket.code}
+              Report Details {ticket.code}
             </h2>
-            <p className={styles.meta}>
-              Created: {ticket.createdLabel}
-              {assignedToAdmin ? ' · Assigned to Admin Team' : ''}
-            </p>
+            <p className={styles.meta}>Created: {ticket.createdLabel}</p>
           </div>
           <button
             type="button"
             className={styles.closeBtn}
-            aria-label="Close ticket details"
+            aria-label="Close report details"
             onClick={onClose}
           >
             <X size={18} />
@@ -76,7 +70,7 @@ export function TicketDetailsModal({
         <div className={styles.body}>
           <div className={styles.main}>
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>Ticket Information</h3>
+              <h3 className={styles.sectionTitle}>Report Information</h3>
               <dl className={styles.infoGrid}>
                 <div>
                   <dt>Ticket ID</dt>
@@ -87,23 +81,31 @@ export function TicketDetailsModal({
                   <dd>{ticket.createdLabel}</dd>
                 </div>
                 <div>
-                  <dt>User Name</dt>
+                  <dt>Reported By</dt>
                   <dd>
                     {ticket.reportBy} #{ticket.reportById}
                   </dd>
                 </div>
                 <div>
-                  <dt>User Type</dt>
+                  <dt>Reporter Type</dt>
                   <dd>
                     <TicketUserTypeBadge type={ticket.userType} />
                   </dd>
                 </div>
                 <div>
-                  <dt>Reported To</dt>
+                  <dt>Reported User</dt>
                   <dd>
                     {ticket.reportTo} #{ticket.reportToId}
                   </dd>
                 </div>
+                {ticket.reportedRole ? (
+                  <div>
+                    <dt>Reported Role</dt>
+                    <dd>
+                      <TicketUserTypeBadge type={ticket.reportedRole} />
+                    </dd>
+                  </div>
+                ) : null}
               </dl>
             </section>
 
@@ -145,45 +147,45 @@ export function TicketDetailsModal({
           <aside className={styles.side}>
             <div className={styles.statusBlock}>
               <p className={styles.sideLabel}>Current Status</p>
-              <TicketStatusBadge status={status} />
+              <TicketStatusBadge status={ticket.status} />
             </div>
 
-            <label className={styles.field}>
-              <span>Update Status</span>
-              <select
-                value={status}
-                onChange={event =>
-                  setStatus(event.target.value as TicketStatus)
-                }
-              >
-                <option value="open">Open</option>
-                <option value="resolved">Resolved</option>
-              </select>
-            </label>
+            {ticket.adminAction && ticket.adminAction !== 'none' ? (
+              <p className={styles.actionHint}>
+                Admin action: {ticket.adminAction}
+              </p>
+            ) : null}
 
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={() => onSave({status, assignedToAdmin})}
-            >
-              Update Status
-            </button>
-            <button
-              type="button"
-              className={styles.outlineBtn}
-              onClick={() => onSave({status, assignedToAdmin})}
-            >
-              Save Changes
-            </button>
+            {error ? <p className={styles.errorText}>{error}</p> : null}
 
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={assignedToAdmin}
-                onChange={event => setAssignedToAdmin(event.target.checked)}
-              />
-              Assigned To Admin Team
-            </label>
+            {isOpen ? (
+              <>
+                <p className={styles.actionHint}>
+                  Ignore closes this report without punishing the user.
+                  Terminate blocks/terminates the reported account.
+                </p>
+                <button
+                  type="button"
+                  className={styles.outlineBtn}
+                  disabled={busy}
+                  onClick={onIgnore}
+                >
+                  Ignore
+                </button>
+                <button
+                  type="button"
+                  className={styles.dangerBtn}
+                  disabled={busy}
+                  onClick={onTerminate}
+                >
+                  Terminate User
+                </button>
+              </>
+            ) : (
+              <p className={styles.actionHint}>
+                This report is already {ticket.status}.
+              </p>
+            )}
           </aside>
         </div>
       </div>
