@@ -5,8 +5,11 @@
 }
 
 .header {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .title {
@@ -20,6 +23,31 @@
   margin: 6px 0 0;
   font-size: 14px;
   color: var(--color-text-secondary);
+}
+
+.modeTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modeTab {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.modeTabActive {
+  background: #111827;
+  border-color: #111827;
+  color: #fff;
 }
 
 .statGrid {

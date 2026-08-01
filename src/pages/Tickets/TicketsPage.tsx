@@ -2,8 +2,12 @@ import {useCallback, useEffect, useState} from 'react';
 import {ChevronLeft, ChevronRight, MoreVertical, Search} from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
-import {TicketStatusBadge} from '../../components/tickets/TicketBadge/TicketBadge';
+import {
+  SupportTicketStatusBadge,
+  TicketStatusBadge,
+} from '../../components/tickets/TicketBadge/TicketBadge';
 import {TicketDetailsModal} from '../../components/tickets/TicketDetailsModal/TicketDetailsModal';
+import {SupportTicketDetailsModal} from '../../components/tickets/TicketDetailsModal/SupportTicketDetailsModal';
 import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
 import {ApiError} from '../../api/client';
 import {
@@ -16,17 +20,36 @@ import {
   type TicketStatus,
   type TicketUserType,
 } from '../../api/reports';
+import {
+  fetchSupportTicketStats,
+  fetchSupportTickets,
+  updateSupportTicketStatus,
+  type SupportTicketItem,
+  type SupportTicketStats,
+  type SupportTicketStatus,
+} from '../../api/supportTickets';
 import styles from './TicketsPage.module.css';
 
 const PAGE_SIZE = 10;
+type Mode = 'support' | 'reports';
 
 export function TicketsPage() {
-  const [tickets, setTickets] = useState<TicketItem[]>([]);
-  const [stats, setStats] = useState<TicketStats | null>(null);
-  const [userType, setUserType] = useState<'all' | TicketUserType>('caller');
+  const [mode, setMode] = useState<Mode>('support');
+
+  const [supportTickets, setSupportTickets] = useState<SupportTicketItem[]>([]);
+  const [supportStats, setSupportStats] = useState<SupportTicketStats | null>(
+    null,
+  );
+  const [reportTickets, setReportTickets] = useState<TicketItem[]>([]);
+  const [reportStats, setReportStats] = useState<TicketStats | null>(null);
+
+  const [userType, setUserType] = useState<'caller' | 'receiver'>('caller');
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | TicketStatus>('all');
+  const [supportStatus, setSupportStatus] = useState<
+    'all' | SupportTicketStatus
+  >('all');
+  const [reportStatus, setReportStatus] = useState<'all' | TicketStatus>('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
@@ -34,7 +57,10 @@ export function TicketsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedSupportId, setSelectedSupportId] = useState<string | null>(
+    null,
+  );
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -48,36 +74,68 @@ export function TicketsPage() {
     setLoading(true);
     setError('');
     try {
-      const [listResult, statsResult] = await Promise.all([
-        fetchReports({
-          q: debouncedQuery || undefined,
-          status: statusFilter === 'all' ? undefined : statusFilter,
-          userType:
-            userType === 'all' || userType === 'agent' ? undefined : userType,
-          page,
-          limit: PAGE_SIZE,
-          dateFrom: dateFrom || undefined,
-          dateTo: dateTo || undefined,
-        }),
-        fetchReportStats(),
-      ]);
-      setTickets(listResult.tickets);
-      setTotal(listResult.pagination.total);
-      setTotalPages(listResult.pagination.totalPages);
-      setStats(statsResult.stats);
+      if (mode === 'support') {
+        const [listResult, statsResult] = await Promise.all([
+          fetchSupportTickets({
+            q: debouncedQuery || undefined,
+            status: supportStatus === 'all' ? undefined : supportStatus,
+            role: userType,
+            page,
+            limit: PAGE_SIZE,
+            dateFrom: dateFrom || undefined,
+            dateTo: dateTo || undefined,
+          }),
+          fetchSupportTicketStats(),
+        ]);
+        setSupportTickets(listResult.tickets);
+        setTotal(listResult.pagination.total);
+        setTotalPages(listResult.pagination.totalPages);
+        setSupportStats(statsResult.stats);
+      } else {
+        const [listResult, statsResult] = await Promise.all([
+          fetchReports({
+            q: debouncedQuery || undefined,
+            status: reportStatus === 'all' ? undefined : reportStatus,
+            userType,
+            page,
+            limit: PAGE_SIZE,
+            dateFrom: dateFrom || undefined,
+            dateTo: dateTo || undefined,
+          }),
+          fetchReportStats(),
+        ]);
+        setReportTickets(listResult.tickets);
+        setTotal(listResult.pagination.total);
+        setTotalPages(listResult.pagination.totalPages);
+        setReportStats(statsResult.stats);
+      }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load reports.');
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to load tickets.',
+      );
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery, statusFilter, userType, page, dateFrom, dateTo]);
+  }, [
+    mode,
+    debouncedQuery,
+    supportStatus,
+    reportStatus,
+    userType,
+    page,
+    dateFrom,
+    dateTo,
+  ]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const selected = selectedId
-    ? tickets.find(ticket => ticket.id === selectedId) || null
+  const selectedSupport = selectedSupportId
+    ? supportTickets.find(ticket => ticket.id === selectedSupportId) || null
+    : null;
+  const selectedReport = selectedReportId
+    ? reportTickets.find(ticket => ticket.id === selectedReportId) || null
     : null;
 
   const start = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
@@ -88,26 +146,65 @@ export function TicketsPage() {
     setMenuOpenId(null);
   }
 
-  function onTabChange(next: 'all' | TicketUserType) {
+  function onModeChange(next: Mode) {
+    setMode(next);
+    setPage(1);
+    setMenuOpenId(null);
+    setSelectedSupportId(null);
+    setSelectedReportId(null);
+    setActionError('');
+  }
+
+  function onTabChange(next: 'caller' | 'receiver') {
     setUserType(next);
     setPage(1);
     setMenuOpenId(null);
   }
 
-  function patchTicket(next: TicketItem) {
-    setTickets(current =>
+  function patchSupport(next: SupportTicketItem) {
+    setSupportTickets(current =>
       current.map(ticket => (ticket.id === next.id ? next : ticket)),
     );
   }
 
-  async function handleIgnore() {
-    if (!selected) return;
+  function patchReport(next: TicketItem) {
+    setReportTickets(current =>
+      current.map(ticket => (ticket.id === next.id ? next : ticket)),
+    );
+  }
+
+  async function handleSupportUpdate(input: {
+    status: SupportTicketStatus;
+    adminNote?: string;
+  }) {
+    if (!selectedSupport) return;
     setActionBusy(true);
     setActionError('');
     try {
-      const result = await ignoreReport(selected.id);
-      patchTicket(result.ticket);
-      setSelectedId(null);
+      const result = await updateSupportTicketStatus(
+        selectedSupport.id,
+        input,
+      );
+      patchSupport(result.ticket);
+      setSelectedSupportId(null);
+      void load();
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError ? err.message : 'Failed to update ticket.',
+      );
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleIgnore() {
+    if (!selectedReport) return;
+    setActionBusy(true);
+    setActionError('');
+    try {
+      const result = await ignoreReport(selectedReport.id);
+      patchReport(result.ticket);
+      setSelectedReportId(null);
       void load();
     } catch (err) {
       setActionError(
@@ -119,20 +216,20 @@ export function TicketsPage() {
   }
 
   async function handleTerminate() {
-    if (!selected) return;
+    if (!selectedReport) return;
     const confirmed = window.confirm(
-      `Terminate ${selected.reportTo}? This will block/terminate their account.`,
+      `Terminate ${selectedReport.reportTo}? This will block/terminate their account.`,
     );
     if (!confirmed) return;
     setActionBusy(true);
     setActionError('');
     try {
       const result = await terminateReport(
-        selected.id,
-        `Terminated from report ${selected.code}`,
+        selectedReport.id,
+        `Terminated from report ${selectedReport.code}`,
       );
-      patchTicket(result.ticket);
-      setSelectedId(null);
+      patchReport(result.ticket);
+      setSelectedReportId(null);
       void load();
     } catch (err) {
       setActionError(
@@ -150,23 +247,73 @@ export function TicketsPage() {
           <div>
             <h1 className={styles.title}>Tickets</h1>
             <p className={styles.subtitle}>
-              Review user reports from chat. Ignore or terminate as needed.
+              {mode === 'support'
+                ? 'Manage Contact Support tickets from callers and receivers.'
+                : 'Review user reports from chat. Ignore or terminate as needed.'}
             </p>
+          </div>
+          <div className={styles.modeTabs}>
+            <button
+              type="button"
+              className={[
+                styles.modeTab,
+                mode === 'support' ? styles.modeTabActive : '',
+              ].join(' ')}
+              onClick={() => onModeChange('support')}
+            >
+              Support Tickets
+            </button>
+            <button
+              type="button"
+              className={[
+                styles.modeTab,
+                mode === 'reports' ? styles.modeTabActive : '',
+              ].join(' ')}
+              onClick={() => onModeChange('reports')}
+            >
+              Chat Reports
+            </button>
           </div>
         </header>
 
         <section className={styles.statGrid}>
-          <StatCard
-            label="Total Tickets"
-            value={(stats?.total ?? 0).toLocaleString('en-IN')}
-            tone="dark"
-          />
-          <StatCard label="Open Tickets" value={stats?.open ?? 0} tone="gold" />
-          <StatCard
-            label="Resolved"
-            value={stats?.resolved ?? 0}
-            tone="green"
-          />
+          {mode === 'support' ? (
+            <>
+              <StatCard
+                label="Total Tickets"
+                value={(supportStats?.total ?? 0).toLocaleString('en-IN')}
+                tone="dark"
+              />
+              <StatCard
+                label="Open / In Review"
+                value={supportStats?.open ?? 0}
+                tone="gold"
+              />
+              <StatCard
+                label="Solved / Closed"
+                value={supportStats?.resolved ?? 0}
+                tone="green"
+              />
+            </>
+          ) : (
+            <>
+              <StatCard
+                label="Total Reports"
+                value={(reportStats?.total ?? 0).toLocaleString('en-IN')}
+                tone="dark"
+              />
+              <StatCard
+                label="Open Reports"
+                value={reportStats?.open ?? 0}
+                tone="gold"
+              />
+              <StatCard
+                label="Resolved"
+                value={reportStats?.resolved ?? 0}
+                tone="green"
+              />
+            </>
+          )}
         </section>
 
         {error ? <p className={styles.subtitle}>{error}</p> : null}
@@ -199,7 +346,11 @@ export function TicketsPage() {
                 <Search size={16} />
                 <input
                   type="search"
-                  placeholder="Search Tickets..."
+                  placeholder={
+                    mode === 'support'
+                      ? 'Search support tickets...'
+                      : 'Search reports...'
+                  }
                   value={query}
                   onChange={event => {
                     setQuery(event.target.value);
@@ -209,18 +360,38 @@ export function TicketsPage() {
               </label>
               <label className={styles.selectField}>
                 <span>Status</span>
-                <select
-                  value={statusFilter}
-                  onChange={event => {
-                    setStatusFilter(event.target.value as 'all' | TicketStatus);
-                    setPage(1);
-                  }}
-                >
-                  <option value="all">All</option>
-                  <option value="open">Open</option>
-                  <option value="ignored">Ignored</option>
-                  <option value="resolved">Resolved</option>
-                </select>
+                {mode === 'support' ? (
+                  <select
+                    value={supportStatus}
+                    onChange={event => {
+                      setSupportStatus(
+                        event.target.value as 'all' | SupportTicketStatus,
+                      );
+                      setPage(1);
+                    }}
+                  >
+                    <option value="all">All</option>
+                    <option value="open">Open</option>
+                    <option value="in_review">In Review</option>
+                    <option value="solved">Solved</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                ) : (
+                  <select
+                    value={reportStatus}
+                    onChange={event => {
+                      setReportStatus(
+                        event.target.value as 'all' | TicketStatus,
+                      );
+                      setPage(1);
+                    }}
+                  >
+                    <option value="all">All</option>
+                    <option value="open">Open</option>
+                    <option value="ignored">Ignored</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+                )}
               </label>
               <label className={styles.dateField}>
                 <span>Date from</span>
@@ -252,9 +423,19 @@ export function TicketsPage() {
               <thead>
                 <tr>
                   <th>Ticket ID</th>
-                  <th>Report By</th>
-                  <th>Report To</th>
-                  <th>Issue Type</th>
+                  {mode === 'support' ? (
+                    <>
+                      <th>User</th>
+                      <th>Category</th>
+                      <th>Subject</th>
+                    </>
+                  ) : (
+                    <>
+                      <th>Report By</th>
+                      <th>Report To</th>
+                      <th>Issue Type</th>
+                    </>
+                  )}
                   <th>Status</th>
                   <th>Created Date</th>
                   <th>Action</th>
@@ -264,17 +445,74 @@ export function TicketsPage() {
                 {loading ? (
                   <tr>
                     <td colSpan={7} className={styles.emptyCell}>
-                      <EmptyTableState label="Loading reports..." />
+                      <EmptyTableState label="Loading tickets..." />
                     </td>
                   </tr>
-                ) : tickets.length === 0 ? (
+                ) : mode === 'support' ? (
+                  supportTickets.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className={styles.emptyCell}>
+                        <EmptyTableState label="No support tickets match your filters." />
+                      </td>
+                    </tr>
+                  ) : (
+                    supportTickets.map(ticket => (
+                      <tr key={ticket.id}>
+                        <td className={styles.code}>{ticket.code}</td>
+                        <td>{ticket.userName}</td>
+                        <td>{ticket.category}</td>
+                        <td>{ticket.subject}</td>
+                        <td>
+                          <SupportTicketStatusBadge status={ticket.status} />
+                        </td>
+                        <td>{ticket.createdLabel}</td>
+                        <td>
+                          <div className={styles.actionWrap}>
+                            <button
+                              type="button"
+                              className={styles.menuBtn}
+                              aria-label={`Actions for ${ticket.code}`}
+                              onClick={event => {
+                                event.stopPropagation();
+                                setMenuOpenId(current =>
+                                  current === ticket.id ? null : ticket.id,
+                                );
+                              }}
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                            {menuOpenId === ticket.id ? (
+                              <div
+                                className={styles.menu}
+                                role="menu"
+                                onClick={event => event.stopPropagation()}
+                              >
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setActionError('');
+                                    setSelectedSupportId(ticket.id);
+                                    setMenuOpenId(null);
+                                  }}
+                                >
+                                  View details
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )
+                ) : reportTickets.length === 0 ? (
                   <tr>
                     <td colSpan={7} className={styles.emptyCell}>
-                      <EmptyTableState label="No tickets match your filters." />
+                      <EmptyTableState label="No reports match your filters." />
                     </td>
                   </tr>
                 ) : (
-                  tickets.map(ticket => (
+                  reportTickets.map(ticket => (
                     <tr key={ticket.id}>
                       <td className={styles.code}>{ticket.code}</td>
                       <td>{ticket.reportBy}</td>
@@ -310,7 +548,7 @@ export function TicketsPage() {
                                 role="menuitem"
                                 onClick={() => {
                                   setActionError('');
-                                  setSelectedId(ticket.id);
+                                  setSelectedReportId(ticket.id);
                                   setMenuOpenId(null);
                                 }}
                               >
@@ -369,13 +607,26 @@ export function TicketsPage() {
           </div>
         </section>
 
-        {selected ? (
-          <TicketDetailsModal
-            ticket={selected}
+        {selectedSupport ? (
+          <SupportTicketDetailsModal
+            ticket={selectedSupport}
             busy={actionBusy}
             error={actionError}
             onClose={() => {
-              setSelectedId(null);
+              setSelectedSupportId(null);
+              setActionError('');
+            }}
+            onUpdateStatus={input => void handleSupportUpdate(input)}
+          />
+        ) : null}
+
+        {selectedReport ? (
+          <TicketDetailsModal
+            ticket={selectedReport}
+            busy={actionBusy}
+            error={actionError}
+            onClose={() => {
+              setSelectedReportId(null);
               setActionError('');
             }}
             onIgnore={() => void handleIgnore()}

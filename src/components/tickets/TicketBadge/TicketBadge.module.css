@@ -14,9 +14,24 @@
   color: #c2410c;
 }
 
+.status_in_review {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
 .status_resolved {
   background: #d1fae5;
   color: #047857;
+}
+
+.status_solved {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.status_closed {
+  background: #e5e7eb;
+  color: #4b5563;
 }
 
 .status_ignored {
