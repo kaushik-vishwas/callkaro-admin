@@ -31,6 +31,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
+}
+
+.rangeWrap {
+  position: relative;
 }
 
 .rangeBtn,
@@ -52,14 +57,87 @@
   color: var(--color-text);
 }
 
+.rangeMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  display: grid;
+  gap: 2px;
+}
+
+.rangeItem {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.rangeItem:hover {
+  background: #f3f4f6;
+}
+
 .exportBtn {
   border: 0;
   background: #111827;
   color: #fff;
 }
 
-.exportBtn:hover {
+.exportBtn:hover:not(:disabled) {
   background: #000;
+}
+
+.exportBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.errorBox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.errorBox p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.errorBox button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.loading {
+  margin: 24px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
 }
 
 .kpiGrid {

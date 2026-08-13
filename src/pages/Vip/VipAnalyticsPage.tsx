@@ -1,16 +1,19 @@
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {Link} from 'react-router-dom';
-import {Pencil, Search, Trash2} from 'lucide-react';
+import {Search} from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
 import {VipSubnav} from '../../components/vip/VipSubnav/VipSubnav';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
+import {ApiError} from '../../api/client';
 import {
+  fetchVipAnalytics,
   formatInr,
   formatNumber,
-  VIP_ANALYTICS,
-  VIP_TOP_USERS,
+  type VipAnalytics,
   type VipPeriod,
-} from '../../data/vip';
+  type VipTopUser,
+} from '../../api/vip';
 import styles from './VipAnalyticsPage.module.css';
 
 function RevenueChart({
@@ -72,25 +75,60 @@ function RevenueChart({
   );
 }
 
+const EMPTY_ANALYTICS: VipAnalytics = {
+  revenue: 0,
+  revenueLabel: '₹ 0',
+  activeVipUsers: 0,
+  chart: [],
+  topUsers: [],
+};
+
 export function VipAnalyticsPage() {
   const [period, setPeriod] = useState<VipPeriod>('monthly');
   const [query, setQuery] = useState('');
+  const [analytics, setAnalytics] = useState<VipAnalytics>(EMPTY_ANALYTICS);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const chartData = useMemo(() => {
-    if (period === 'weekly') return VIP_ANALYTICS.chartWeekly;
-    if (period === 'yearly') return VIP_ANALYTICS.chartYearly;
-    return VIP_ANALYTICS.chartMonthly;
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    fetchVipAnalytics(period)
+      .then(result => {
+        if (cancelled) return;
+        setAnalytics(result.analytics || EMPTY_ANALYTICS);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : 'Failed to load VIP analytics.',
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [period]);
 
   const topUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return VIP_TOP_USERS;
-    return VIP_TOP_USERS.filter(
-      user =>
+    const rows = analytics.topUsers || [];
+    if (!q) return rows;
+    return rows.filter(
+      (user: VipTopUser) =>
         user.name.toLowerCase().includes(q) ||
         user.userId.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, analytics.topUsers]);
+
+  const chartData = analytics.chart?.length
+    ? analytics.chart
+    : [{label: '—', value: 0}];
 
   return (
     <DashboardShell>
@@ -138,15 +176,17 @@ export function VipAnalyticsPage() {
           </div>
         </div>
 
+        {error ? <p className={styles.subtitle}>{error}</p> : null}
+
         <section className={styles.statGrid}>
           <StatCard
             label="VIP Revenue"
-            value={VIP_ANALYTICS.revenueLabel}
+            value={analytics.revenueLabel}
             tone="purple"
           />
           <StatCard
             label="Active VIP Users"
-            value={formatNumber(VIP_ANALYTICS.activeVipUsers)}
+            value={formatNumber(analytics.activeVipUsers)}
             tone="pink"
           />
         </section>
@@ -162,7 +202,11 @@ export function VipAnalyticsPage() {
             </h2>
           </div>
           <div className={styles.chartWrap}>
-            <RevenueChart data={chartData} />
+            {loading ? (
+              <EmptyTableState label="Loading chart..." />
+            ) : (
+              <RevenueChart data={chartData} />
+            )}
           </div>
         </section>
 
@@ -185,39 +229,43 @@ export function VipAnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {topUsers.length === 0 ? (
+                {loading ? (
                   <tr>
                     <td colSpan={5} className={styles.empty}>
-                      No users match your search.
+                      <EmptyTableState label="Loading users..." />
                     </td>
                   </tr>
-                ) : null}
-                {topUsers.map(user => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className={styles.userCell}>
-                        <span className={styles.avatar}>
-                          {user.name.slice(0, 1)}
+                ) : topUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className={styles.empty}>
+                      No VIP spenders yet.
+                    </td>
+                  </tr>
+                ) : (
+                  topUsers.map(user => (
+                    <tr key={user.id}>
+                      <td>
+                        <Link
+                          to={`/vip/users/${user.id}`}
+                          className={styles.userCell}
+                        >
+                          <span className={styles.avatar}>
+                            {user.name.slice(0, 1)}
+                          </span>
+                          <span className={styles.strong}>{user.name}</span>
+                        </Link>
+                      </td>
+                      <td className={styles.code}>{user.userId}</td>
+                      <td>{formatInr(user.amountSpent)}</td>
+                      <td>{formatNumber(user.totalCalls)}</td>
+                      <td>
+                        <span className={styles.statusActive}>
+                          {String(user.status || 'active').toUpperCase()}
                         </span>
-                        <span className={styles.strong}>{user.name}</span>
-                      </div>
-                    </td>
-                    <td className={styles.code}>{user.userId}</td>
-                    <td>{formatInr(user.amountSpent)}</td>
-                    <td>{formatNumber(user.totalCalls)}</td>
-                    <td>
-                      <div className={styles.statusRow}>
-                        <span className={styles.statusActive}>Active</span>
-                        <button type="button" className={styles.iconBtn} aria-label="Edit">
-                          <Pencil size={14} />
-                        </button>
-                        <button type="button" className={styles.iconBtn} aria-label="Delete">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

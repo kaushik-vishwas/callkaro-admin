@@ -1,7 +1,11 @@
 import {useEffect, useRef, useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {KeyRound} from 'lucide-react';
-import {SETTINGS_PROFILE} from '../../data/settings';
+import {ApiError} from '../../api/client';
+import {sendAdminBankOtp, verifyAdminBankOtp} from '../../api/admin';
+import {
+  saveBankChallengeToken,
+} from '../../data/settings';
 import {SettingsLayout} from './SettingsLayout';
 import styles from './settingsShared.module.css';
 
@@ -9,8 +13,13 @@ const OTP_LENGTH = 6;
 
 export function BankOtpPage() {
   const navigate = useNavigate();
+  const destination =
+    sessionStorage.getItem('callkaro_bank_otp_destination') || 'your account';
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  const [seconds, setSeconds] = useState(99);
+  const [seconds, setSeconds] = useState(10 * 60);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [debugOtp, setDebugOtp] = useState('');
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
@@ -35,10 +44,32 @@ export function BankOtpPage() {
     }
   }
 
-  function onVerify() {
+  async function onVerify() {
     const code = digits.join('');
-    if (code.length === OTP_LENGTH) {
+    if (code.length !== OTP_LENGTH) return;
+    setBusy(true);
+    setError('');
+    try {
+      const result = await verifyAdminBankOtp(code);
+      saveBankChallengeToken(result.bankChallengeToken);
       navigate('/settings/bank/update');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Invalid OTP.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onResend() {
+    if (seconds > 0) return;
+    setError('');
+    try {
+      const result = await sendAdminBankOtp();
+      if (result.debugOtp) setDebugOtp(result.debugOtp);
+      setSeconds((result.otpExpiresInMinutes || 10) * 60);
+      setDigits(Array(OTP_LENGTH).fill(''));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to resend OTP.');
     }
   }
 
@@ -48,7 +79,7 @@ export function BankOtpPage() {
   return (
     <SettingsLayout
       title="Enter Verification Code"
-      subtitle={`A 6-digit verification code has been sent to your registered mobile number ${SETTINGS_PROFILE.mobileMasked}. It will be valid for 10 minutes.`}
+      subtitle={`A 6-digit verification code has been sent to ${destination}. It will be valid for 10 minutes.`}
     >
       <section className={styles.centerCard}>
         <div className={styles.iconWrap}>
@@ -72,34 +103,38 @@ export function BankOtpPage() {
           ))}
         </div>
 
+        {error ? (
+          <p style={{color: '#b91c1c', fontWeight: 600}}>{error}</p>
+        ) : null}
+        {debugOtp ? <p className={styles.hint}>Dev OTP: {debugOtp}</p> : null}
+
         <div className={styles.helperRow}>
           <p style={{margin: 0}}>
-            {seconds > 0 ? `Resend code in ${mm}:${ss}` : 'You can resend the code now.'}
+            {seconds > 0
+              ? `Resend code in ${mm}:${ss}`
+              : 'You can resend the code now.'}
           </p>
           <button
             type="button"
             className={styles.linkBtn}
             disabled={seconds > 0}
-            onClick={() => {
-              setSeconds(99);
-              setDigits(Array(OTP_LENGTH).fill(''));
-            }}
+            onClick={() => void onResend()}
           >
             Resend OTP
           </button>
-          <button type="button" className={styles.linkBtn}>
-            Experiencing issues? Change Mobile Number
-          </button>
+          <Link to="/settings/profile" className={styles.linkBtn}>
+            Update mobile number in Profile
+          </Link>
         </div>
 
         <div className={styles.centerActions}>
           <button
             type="button"
             className={styles.primaryBtn}
-            disabled={digits.join('').length !== OTP_LENGTH}
-            onClick={onVerify}
+            disabled={digits.join('').length !== OTP_LENGTH || busy}
+            onClick={() => void onVerify()}
           >
-            Verify OTP
+            {busy ? 'Verifying…' : 'Verify OTP'}
           </button>
           <Link to="/settings/bank" className={styles.secondaryBtn}>
             Cancel

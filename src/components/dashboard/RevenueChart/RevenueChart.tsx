@@ -1,19 +1,35 @@
-import {revenueSeries} from '../../../data/dashboard';
+import type {RevenuePoint} from '../../../api/dashboard';
 import styles from './RevenueChart.module.css';
 
 const WIDTH = 640;
 const HEIGHT = 260;
 const PAD = {top: 20, right: 16, bottom: 36, left: 48};
 
-export function RevenueChart() {
-  const max = 80000;
+type Props = {
+  series: RevenuePoint[];
+};
+
+function formatTick(value: number, max: number) {
+  if (max >= 1000) {
+    return value === 0 ? '0' : `${Math.round(value / 1000)}k`;
+  }
+  return String(Math.round(value));
+}
+
+export function RevenueChart({series}: Props) {
+  const safeSeries =
+    series?.length > 0
+      ? series
+      : [{day: '—', value: 0}];
+  const maxRaw = Math.max(...safeSeries.map(item => item.value), 0);
+  const max = maxRaw > 0 ? maxRaw * 1.15 : 1000;
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
 
-  const points = revenueSeries.map((item, index) => {
+  const points = safeSeries.map((item, index) => {
     const x =
       PAD.left +
-      (index / Math.max(1, revenueSeries.length - 1)) * innerW;
+      (index / Math.max(1, safeSeries.length - 1)) * innerW;
     const y = PAD.top + innerH - (item.value / max) * innerH;
     return {x, y, ...item};
   });
@@ -28,7 +44,7 @@ export function RevenueChart() {
     1,
   )} Z`;
 
-  const yTicks = [0, 20000, 40000, 60000, 80000];
+  const yTicks = [0, max / 4, max / 2, (max * 3) / 4, max];
 
   return (
     <section className={styles.card}>
@@ -52,7 +68,7 @@ export function RevenueChart() {
                   className={styles.grid}
                 />
                 <text x={PAD.left - 10} y={y + 4} className={styles.axis}>
-                  {tick === 0 ? '0' : `${tick / 1000}k`}
+                  {formatTick(tick, max)}
                 </text>
               </g>
             );
@@ -63,7 +79,7 @@ export function RevenueChart() {
 
           {points.map(point => (
             <circle
-              key={point.day}
+              key={`${point.day}-${point.date || point.x}`}
               cx={point.x}
               cy={point.y}
               r={3.5}
@@ -73,7 +89,7 @@ export function RevenueChart() {
 
           {points.map(point => (
             <text
-              key={`${point.day}-label`}
+              key={`${point.day}-label-${point.date || point.x}`}
               x={point.x}
               y={HEIGHT - 12}
               className={styles.xLabel}

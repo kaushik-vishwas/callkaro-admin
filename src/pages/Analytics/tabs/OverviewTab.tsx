@@ -1,9 +1,11 @@
+import {useCallback, useEffect, useState} from 'react';
+import {ApiError} from '../../../api/client';
 import {
-  LIVE_ACTIVITY,
-  OVERVIEW_KPIS,
-  REVENUE_WEEK,
-  USER_GROWTH,
-} from '../../../data/analytics';
+  fetchAnalyticsOverview,
+  type ActivityItem,
+  type AnalyticsKpi,
+  type ChartPoint,
+} from '../../../api/analytics';
 import {AnalyticsPanel} from '../AnalyticsPage';
 import styles from '../AnalyticsPage.module.css';
 
@@ -16,6 +18,9 @@ function LineChart({
   color?: string;
   fillId: string;
 }) {
+  if (!data.length) {
+    return <p className={styles.panelSubtitle}>No chart data yet.</p>;
+  }
   const max = Math.max(...data.map(d => d.value), 1);
   const WIDTH = 560;
   const HEIGHT = 200;
@@ -52,7 +57,7 @@ function LineChart({
         strokeLinecap="round"
       />
       {points.map(p => (
-        <g key={p.label}>
+        <g key={`${p.label}-${p.x}`}>
           <circle cx={p.x} cy={p.y} r="3" fill={color} />
           <text x={p.x} y={HEIGHT - 8} className={styles.chartLabel}>
             {p.label}
@@ -63,14 +68,51 @@ function LineChart({
   );
 }
 
-export function OverviewTab() {
+type Props = {rangeDays: number};
+
+export function OverviewTab({rangeDays}: Props) {
+  const [kpis, setKpis] = useState<AnalyticsKpi[]>([]);
+  const [revenueSeries, setRevenueSeries] = useState<ChartPoint[]>([]);
+  const [userGrowth, setUserGrowth] = useState<ChartPoint[]>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await fetchAnalyticsOverview(rangeDays);
+      setKpis(result.overview.kpis || []);
+      setRevenueSeries(result.overview.revenueSeries || []);
+      setUserGrowth(result.overview.userGrowth || []);
+      setActivity(result.overview.activityFeed || []);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to load overview.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [rangeDays]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) return <p className={styles.panelSubtitle}>Loading overview…</p>;
+  if (error) return <p className={styles.panelSubtitle}>{error}</p>;
+
   return (
     <>
       <section className={styles.kpiGrid}>
-        {OVERVIEW_KPIS.map(kpi => (
+        {kpis.map(kpi => (
           <article
             key={kpi.id}
-            className={[styles.kpiCard, styles[`tone_${kpi.tone}`]].join(' ')}
+            className={[
+              styles.kpiCard,
+              styles[`tone_${kpi.tone || 'pink'}`],
+            ].join(' ')}
           >
             <p className={styles.kpiLabel}>{kpi.label}</p>
             <p className={styles.kpiValue}>
@@ -86,24 +128,30 @@ export function OverviewTab() {
       <div className={styles.chartsRow}>
         <AnalyticsPanel title="Revenue Analytics">
           <div className={styles.chartWrap}>
-            <LineChart data={REVENUE_WEEK} color="#ec4899" fillId="revFill" />
+            <LineChart data={revenueSeries} color="#ec4899" fillId="revFill" />
           </div>
         </AnalyticsPanel>
 
         <AnalyticsPanel title="User Growth">
           <div className={styles.chartWrap}>
-            <LineChart data={USER_GROWTH} color="#8b5cf6" fillId="growthFill" />
+            <LineChart data={userGrowth} color="#8b5cf6" fillId="growthFill" />
           </div>
         </AnalyticsPanel>
 
         <AnalyticsPanel title="Live Activity Feed">
           <ul className={styles.activityList}>
-            {LIVE_ACTIVITY.map(item => (
-              <li key={item.id} className={styles.activityItem}>
-                <p className={styles.activityText}>{item.text}</p>
-                <p className={styles.activityTime}>{item.time}</p>
+            {activity.length === 0 ? (
+              <li className={styles.activityItem}>
+                <p className={styles.activityText}>No recent activity.</p>
               </li>
-            ))}
+            ) : (
+              activity.map(item => (
+                <li key={item.id} className={styles.activityItem}>
+                  <p className={styles.activityText}>{item.text}</p>
+                  <p className={styles.activityTime}>{item.time}</p>
+                </li>
+              ))
+            )}
           </ul>
         </AnalyticsPanel>
       </div>

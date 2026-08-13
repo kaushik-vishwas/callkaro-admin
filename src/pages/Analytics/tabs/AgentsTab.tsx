@@ -1,19 +1,53 @@
-import {useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
+import {ApiError} from '../../../api/client';
 import {
-  AGENT_BREAKDOWN,
-  AGENT_RANKINGS,
+  fetchAnalyticsAgents,
   formatInr,
   formatNumber,
-} from '../../../data/analytics';
+  type AgentBreakdown,
+  type AgentRanking,
+} from '../../../api/analytics';
 import {AnalyticsPanel} from '../AnalyticsPage';
 import styles from '../AnalyticsPage.module.css';
 
 type Period = 'monthly' | 'quarterly' | 'yearly';
+type Props = {rangeDays: number};
 
-export function AgentsTab() {
+export function AgentsTab({rangeDays}: Props) {
   const [period, setPeriod] = useState<Period>('monthly');
-  const totalCommission = AGENT_BREAKDOWN.reduce(
-    (sum, row) => sum + row.commission,
+  const [rankings, setRankings] = useState<AgentRanking[]>([]);
+  const [breakdown, setBreakdown] = useState<AgentBreakdown[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (rangeDays <= 30) setPeriod('monthly');
+    else if (rangeDays <= 90) setPeriod('quarterly');
+    else setPeriod('yearly');
+  }, [rangeDays]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await fetchAnalyticsAgents(period);
+      setRankings(result.rankings || []);
+      setBreakdown(result.breakdown || []);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to load agents.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const totalCommission = breakdown.reduce(
+    (sum, row) => sum + (row.commission || 0),
     0,
   );
 
@@ -45,6 +79,10 @@ export function AgentsTab() {
           </div>
         }
       >
+        {loading ? (
+          <p className={styles.panelSubtitle}>Loading agents…</p>
+        ) : null}
+        {error ? <p className={styles.panelSubtitle}>{error}</p> : null}
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -59,17 +97,32 @@ export function AgentsTab() {
               </tr>
             </thead>
             <tbody>
-              {AGENT_RANKINGS.map(row => (
-                <tr key={row.rank}>
-                  <td className={styles.rank}>{row.rank}</td>
-                  <td className={styles.strong}>{row.name}</td>
-                  <td>{formatNumber(row.receivers)}</td>
-                  <td>{formatInr(row.revenue)}</td>
-                  <td>{formatInr(row.commission)}</td>
-                  <td>{formatInr(row.avgReceiverRevenue)}</td>
-                  <td className={styles.growthPos}>+{row.growth}%</td>
+              {!loading && rankings.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.panelSubtitle}>
+                    No agent revenue for this period.
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                rankings.map(row => (
+                  <tr key={`${row.rank}-${row.name}`}>
+                    <td className={styles.rank}>{row.rank}</td>
+                    <td className={styles.strong}>{row.name}</td>
+                    <td>{formatNumber(row.receivers)}</td>
+                    <td>{formatInr(row.revenue)}</td>
+                    <td>{formatInr(row.commission)}</td>
+                    <td>{formatInr(row.avgReceiverRevenue)}</td>
+                    <td
+                      className={
+                        row.growth >= 0 ? styles.growthPos : styles.growthPos
+                      }
+                    >
+                      {row.growth >= 0 ? '+' : ''}
+                      {row.growth}%
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -77,19 +130,25 @@ export function AgentsTab() {
 
       <AnalyticsPanel title="Agent Revenue Breakdown">
         <div className={styles.breakdownList}>
-          {AGENT_BREAKDOWN.map(row => (
-            <div key={row.name} className={styles.breakdownRow}>
-              <div>
-                <p className={styles.strong} style={{margin: 0}}>
-                  {row.name}
-                </p>
-                <p className={styles.breakdownMeta} style={{margin: '4px 0 0'}}>
-                  Revenue {formatInr(row.revenue)}
-                </p>
+          {breakdown.length === 0 ? (
+            <p className={styles.panelSubtitle}>
+              No receiver breakdown for top agent.
+            </p>
+          ) : (
+            breakdown.map(row => (
+              <div key={row.name} className={styles.breakdownRow}>
+                <div>
+                  <p className={styles.strong} style={{margin: 0}}>
+                    {row.name}
+                  </p>
+                  <p className={styles.breakdownMeta} style={{margin: '4px 0 0'}}>
+                    Revenue {formatInr(row.revenue)}
+                  </p>
+                </div>
+                <div className={styles.strong}>{formatInr(row.commission)}</div>
               </div>
-              <div className={styles.strong}>{formatInr(row.commission)}</div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
         <div className={styles.commissionBar}>
           <span>Total Commission</span>

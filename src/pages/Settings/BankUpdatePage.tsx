@@ -1,31 +1,55 @@
-import {useState, type FormEvent} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {useEffect, useState, type FormEvent} from 'react';
+import {Link, Navigate, useNavigate} from 'react-router-dom';
 import {
   BANK_OPTIONS,
   COUNTRY_OPTIONS,
-  CURRENT_BANK_ACCOUNT,
+  loadBankChallengeToken,
   loadBankDraft,
   saveBankDraft,
   type BankAccount,
 } from '../../data/settings';
+import {ApiError} from '../../api/client';
+import {fetchAdminBank} from '../../api/admin';
 import {SettingsLayout} from './SettingsLayout';
 import styles from './settingsShared.module.css';
 
 export function BankUpdatePage() {
   const navigate = useNavigate();
-  const initial = loadBankDraft();
-  const seeded =
-    initial.accountHolder || initial.iban
-      ? initial
-      : {
-          ...CURRENT_BANK_ACCOUNT,
-          accountHolder: CURRENT_BANK_ACCOUNT.accountHolder,
-          iban: '',
-          ibanMasked: '',
-          verified: false,
-        };
+  const challenge = loadBankChallengeToken();
+  const [form, setForm] = useState<BankAccount>(loadBankDraft());
+  const [loading, setLoading] = useState(true);
 
-  const [form, setForm] = useState<BankAccount>(seeded);
+  useEffect(() => {
+    void (async () => {
+      try {
+        const result = await fetchAdminBank();
+        const draft = loadBankDraft();
+        if (draft.accountHolder || draft.iban) {
+          setForm(draft);
+        } else if (result.bank?.iban) {
+          setForm({
+            accountHolder: result.bank.accountHolder || '',
+            bankName: result.bank.bankName || BANK_OPTIONS[0],
+            iban: '',
+            ibanMasked: '',
+            swift: result.bank.swift || '',
+            branchName: result.bank.branchName || '',
+            country: result.bank.country || 'India',
+            accountType: result.bank.accountType || 'savings',
+            verified: false,
+          });
+        }
+      } catch {
+        /* keep draft */
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (!challenge) {
+    return <Navigate to="/settings/bank/verify" replace />;
+  }
 
   function update<K extends keyof BankAccount>(key: K, value: BankAccount[K]) {
     setForm(prev => ({...prev, [key]: value}));
@@ -48,6 +72,7 @@ export function BankUpdatePage() {
       title="Update Bank Account"
       subtitle="Input your new financial gateway credentials accurately. Ensure the SWIFT code matches your branch location."
     >
+      {loading ? <p>Loading…</p> : null}
       <form className={styles.card} onSubmit={onSubmit}>
         <div className={styles.formGrid}>
           <div className={styles.field}>

@@ -1,8 +1,4 @@
-import {
-  callerActivity,
-  receiverActivity,
-  type HourBucket,
-} from '../../../data/dashboard';
+import type {HourBucket} from '../../../api/dashboard';
 import styles from './IdealTimeChart.module.css';
 
 function GroupedBars({
@@ -21,10 +17,19 @@ function GroupedBars({
   const PAD = {top: 16, right: 8, bottom: 28, left: 36};
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
-  const groupW = innerW / data.length;
+  const safeData = data?.length
+    ? data
+    : Array.from({length: 13}, (_, i) => ({
+        hour: i * 2,
+        call: 0,
+        online: 0,
+        idle: 0,
+      }));
+  const groupW = innerW / safeData.length;
   const barW = Math.min(8, groupW / 4.2);
+  const scaleMax = Math.max(maxY || 1, 0.1);
 
-  const yTicks = [0, maxY / 2, maxY];
+  const yTicks = [0, scaleMax / 2, scaleMax];
 
   return (
     <div className={styles.chartBlock}>
@@ -36,7 +41,7 @@ function GroupedBars({
         aria-label={title}
       >
         {yTicks.map(tick => {
-          const y = PAD.top + innerH - (tick / maxY) * innerH;
+          const y = PAD.top + innerH - (tick / scaleMax) * innerH;
           return (
             <g key={tick}>
               <line
@@ -47,14 +52,14 @@ function GroupedBars({
                 className={styles.grid}
               />
               <text x={PAD.left - 8} y={y + 3} className={styles.axis}>
-                {tick}
+                {Number(tick.toFixed(tick >= 10 ? 0 : 1))}
                 {ySuffix}
               </text>
             </g>
           );
         })}
 
-        {data.map((bucket, index) => {
+        {safeData.map((bucket, index) => {
           const cx = PAD.left + index * groupW + groupW / 2;
           const metrics = [
             {key: 'call', value: bucket.call, className: styles.call},
@@ -65,8 +70,8 @@ function GroupedBars({
           return (
             <g key={bucket.hour}>
               {metrics.map((metric, mIndex) => {
-                const h = (metric.value / maxY) * innerH;
-                const x = cx - (barW * 1.6) + mIndex * (barW + 2);
+                const h = (metric.value / scaleMax) * innerH;
+                const x = cx - barW * 1.6 + mIndex * (barW + 2);
                 const y = PAD.top + innerH - h;
                 return (
                   <rect
@@ -93,7 +98,19 @@ function GroupedBars({
   );
 }
 
-export function IdealTimeChart() {
+type Props = {
+  receiverActivity: HourBucket[];
+  callerActivity: HourBucket[];
+  receiverMaxY: number;
+  callerMaxY: number;
+};
+
+export function IdealTimeChart({
+  receiverActivity,
+  callerActivity,
+  receiverMaxY,
+  callerMaxY,
+}: Props) {
   return (
     <section className={styles.card}>
       <div className={styles.header}>
@@ -115,9 +132,13 @@ export function IdealTimeChart() {
         <GroupedBars
           title="Receiver Activity"
           data={receiverActivity}
-          maxY={16}
+          maxY={Math.max(1, receiverMaxY)}
         />
-        <GroupedBars title="Caller Activity" data={callerActivity} maxY={2} />
+        <GroupedBars
+          title="Caller Activity"
+          data={callerActivity}
+          maxY={Math.max(0.5, callerMaxY)}
+        />
       </div>
 
       <div className={styles.footer}>

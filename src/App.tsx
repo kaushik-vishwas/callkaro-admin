@@ -27,6 +27,9 @@ import {VipPlansPage} from './pages/Vip/VipPlansPage';
 import {VipUsersPage} from './pages/Vip/VipUsersPage';
 import {VipUserDetailPage} from './pages/Vip/VipUserDetailPage';
 import {AnalyticsRoute} from './pages/Analytics/AnalyticsRoute';
+import {IdentityMismatchPage} from './pages/Compliance/IdentityMismatchPage';
+import {DetectedProfilesPage} from './pages/Compliance/DetectedProfilesPage';
+import {ComplianceCaseDetailPage} from './pages/Compliance/ComplianceCaseDetailPage';
 import {SettingsOverviewPage} from './pages/Settings/SettingsOverviewPage';
 import {SettingsWalletPage} from './pages/Settings/SettingsWalletPage';
 import {SettingsProfilePage} from './pages/Settings/SettingsProfilePage';
@@ -274,6 +277,38 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <AnalyticsRoute />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compliance"
+            element={
+              <ProtectedRoute>
+                <IdentityMismatchPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compliance/detected-profiles"
+            element={
+              <ProtectedRoute>
+                <DetectedProfilesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compliance/identity-mismatch/:caseId"
+            element={
+              <ProtectedRoute>
+                <ComplianceCaseDetailPage mode="identity" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compliance/detected-profiles/:caseId"
+            element={
+              <ProtectedRoute>
+                <ComplianceCaseDetailPage mode="detected" />
               </ProtectedRoute>
             }
           />

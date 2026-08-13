@@ -1,17 +1,24 @@
 import {Link} from 'react-router-dom';
 import {Check} from 'lucide-react';
-import {SETTINGS_PROFILE} from '../../data/settings';
+import {useAuth} from '../../auth/AuthContext';
+import {loadBankSuccessMeta} from '../../data/settings';
 import {SettingsLayout} from './SettingsLayout';
 import styles from './settingsShared.module.css';
 
 export function BankSuccessPage() {
-  const updatedOn = new Date().toLocaleString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const {admin} = useAuth();
+  const meta = loadBankSuccessMeta();
+  const updatedOn =
+    meta?.updatedOnLabel ||
+    new Date().toLocaleString('en-IN', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  const updatedBy = meta?.updatedBy || admin?.name || 'Admin';
+  const reference = meta?.reference || '—';
 
   return (
     <SettingsLayout title="Bank Update Successful">
@@ -33,11 +40,11 @@ export function BankSuccessPage() {
             </div>
             <div className={styles.kvRow}>
               <dt>Updated By</dt>
-              <dd>{SETTINGS_PROFILE.name}</dd>
+              <dd>{updatedBy}</dd>
             </div>
             <div className={styles.kvRow}>
               <dt>Reference Number</dt>
-              <dd>BNK-2026-07-4587</dd>
+              <dd>{reference}</dd>
             </div>
           </dl>
         </div>

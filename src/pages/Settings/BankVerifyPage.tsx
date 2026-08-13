@@ -1,11 +1,36 @@
+import {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Phone, ShieldCheck} from 'lucide-react';
-import {SETTINGS_PROFILE} from '../../data/settings';
+import {useAuth} from '../../auth/AuthContext';
+import {ApiError} from '../../api/client';
+import {sendAdminBankOtp} from '../../api/admin';
 import {SettingsLayout} from './SettingsLayout';
 import styles from './settingsShared.module.css';
 
 export function BankVerifyPage() {
   const navigate = useNavigate();
+  const {admin} = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [debugOtp, setDebugOtp] = useState('');
+
+  async function onSendOtp() {
+    setBusy(true);
+    setError('');
+    try {
+      const result = await sendAdminBankOtp();
+      if (result.debugOtp) setDebugOtp(result.debugOtp);
+      sessionStorage.setItem(
+        'callkaro_bank_otp_destination',
+        result.destination,
+      );
+      navigate('/settings/bank/otp');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to send OTP.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <SettingsLayout
@@ -20,7 +45,7 @@ export function BankVerifyPage() {
         <p className={styles.centerText}>
           For your security, please verify your identity before updating your
           bank account details. We will send a secure OTP to your registered
-          phone.
+          contact.
         </p>
 
         <div className={styles.contactCard}>
@@ -28,20 +53,32 @@ export function BankVerifyPage() {
             <Phone size={18} />
           </span>
           <div>
-            <p className={styles.contactLabel}>Mobile Number</p>
+            <p className={styles.contactLabel}>
+              {admin?.phone ? 'Mobile Number' : 'Email'}
+            </p>
             <p className={styles.contactValue}>
-              {SETTINGS_PROFILE.mobileMasked}
+              {admin?.phoneMasked && admin.phoneMasked !== 'Not set'
+                ? admin.phoneMasked
+                : admin?.email || '—'}
             </p>
           </div>
         </div>
+
+        {error ? (
+          <p style={{color: '#b91c1c', fontWeight: 600}}>{error}</p>
+        ) : null}
+        {debugOtp ? (
+          <p className={styles.hint}>Dev OTP: {debugOtp}</p>
+        ) : null}
 
         <div className={styles.centerActions}>
           <button
             type="button"
             className={styles.primaryBtn}
-            onClick={() => navigate('/settings/bank/otp')}
+            disabled={busy}
+            onClick={() => void onSendOtp()}
           >
-            Send OTP
+            {busy ? 'Sending…' : 'Send OTP'}
           </button>
           <Link to="/settings/bank" className={styles.secondaryBtn}>
             Cancel

@@ -1,3 +1,4 @@
+import {useEffect, useState} from 'react';
 import {Link, Navigate, useParams} from 'react-router-dom';
 import {
   ArrowLeft,
@@ -7,19 +8,80 @@ import {
   Pencil,
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
+import {ApiError} from '../../api/client';
 import {
+  fetchVipUser,
   formatInr,
   formatNumber,
-  getVipUserById,
-} from '../../data/vip';
+  type VipUser,
+} from '../../api/vip';
 import styles from './VipUserDetailPage.module.css';
 
 export function VipUserDetailPage() {
   const {userId = ''} = useParams();
-  const user = getVipUserById(userId);
+  const [user, setUser] = useState<VipUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    if (!userId) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    fetchVipUser(userId)
+      .then(result => {
+        if (cancelled) return;
+        setUser(result.user);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.statusCode === 404) {
+          setNotFound(true);
+          return;
+        }
+        setError(
+          err instanceof ApiError ? err.message : 'Failed to load VIP user.',
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  if (notFound) {
+    return <Navigate to="/vip/users" replace />;
+  }
+
+  if (loading) {
+    return (
+      <DashboardShell>
+        <div className={styles.page}>
+          <EmptyTableState label="Loading VIP user..." />
+        </div>
+      </DashboardShell>
+    );
+  }
 
   if (!user) {
-    return <Navigate to="/vip/users" replace />;
+    return (
+      <DashboardShell>
+        <div className={styles.page}>
+          <p>{error || 'VIP user not found.'}</p>
+          <Link to="/vip/users" className={styles.back}>
+            Back to VIP Users
+          </Link>
+        </div>
+      </DashboardShell>
+    );
   }
 
   return (
@@ -30,9 +92,9 @@ export function VipUserDetailPage() {
             <ArrowLeft size={14} strokeWidth={2.5} />
             Back to VIP Users
           </Link>
-          <button type="button" className={styles.profileLink}>
+          <Link to={`/callers/${user.id}`} className={styles.profileLink}>
             View User Profile
-          </button>
+          </Link>
         </div>
 
         <section className={styles.hero}>
@@ -41,14 +103,16 @@ export function VipUserDetailPage() {
             <div>
               <div className={styles.nameRow}>
                 <h1 className={styles.name}>{user.name}</h1>
-                <span className={styles.accountActive}>Active Account</span>
+                <span className={styles.accountActive}>
+                  {user.status === 'active' ? 'Active Account' : user.status}
+                </span>
               </div>
               <p className={styles.meta}>
                 {user.code} · Joined {user.joinDate} · {user.vipPlan}
               </p>
               <p className={styles.location}>
                 <MapPin size={14} />
-                {user.location}
+                {user.location || '—'}
               </p>
             </div>
           </div>
@@ -80,19 +144,23 @@ export function VipUserDetailPage() {
               </div>
               <div>
                 <dt>Mobile Number</dt>
-                <dd>{user.phone}</dd>
+                <dd>{user.phone || '—'}</dd>
               </div>
               <div>
                 <dt>Email Address</dt>
-                <dd>{user.email}</dd>
+                <dd>{user.email || '—'}</dd>
               </div>
               <div>
-                <dt>Gender</dt>
-                <dd>{user.gender}</dd>
+                <dt>VIP Plan</dt>
+                <dd>{user.vipPlan || '—'}</dd>
               </div>
               <div>
-                <dt>Age</dt>
-                <dd>{user.age}</dd>
+                <dt>Expires</dt>
+                <dd>
+                  {user.vipExpiresAt
+                    ? new Date(user.vipExpiresAt).toLocaleDateString('en-GB')
+                    : '—'}
+                </dd>
               </div>
             </dl>
           </section>
@@ -106,9 +174,6 @@ export function VipUserDetailPage() {
             <section className={styles.card}>
               <div className={styles.cardHead}>
                 <h2>Recent Wallet Actions</h2>
-                <button type="button" className={styles.editLink}>
-                  History
-                </button>
               </div>
               <dl className={styles.kv}>
                 <div>
@@ -127,7 +192,6 @@ export function VipUserDetailPage() {
         <section className={styles.card}>
           <div className={styles.cardHead}>
             <h2>Call Activity Summary</h2>
-            <span className={styles.periodChip}>Last 30 Days</span>
           </div>
           <div className={styles.miniStats}>
             <div>
@@ -172,18 +236,19 @@ export function VipUserDetailPage() {
                       No recent calls.
                     </td>
                   </tr>
-                ) : null}
-                {user.recentCalls.map(call => (
-                  <tr key={call.id}>
-                    <td className={styles.strong}>{call.name}</td>
-                    <td>
-                      <span className={styles.typeChip}>{call.callType}</span>
-                    </td>
-                    <td>{call.duration}</td>
-                    <td>{formatNumber(call.coins)}</td>
-                    <td>{call.dateTime}</td>
-                  </tr>
-                ))}
+                ) : (
+                  user.recentCalls.map(call => (
+                    <tr key={call.id}>
+                      <td className={styles.strong}>{call.name}</td>
+                      <td>
+                        <span className={styles.typeChip}>{call.callType}</span>
+                      </td>
+                      <td>{call.duration}</td>
+                      <td>{formatNumber(call.coins)}</td>
+                      <td>{call.dateTime}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -200,7 +265,7 @@ export function VipUserDetailPage() {
                 </p>
               </div>
               <div>
-                <p className={styles.miniLabel}>VIP Calls</p>
+                <p className={styles.miniLabel}>Completed Calls</p>
                 <p className={styles.miniValue}>
                   {formatNumber(user.activityStats.vipCalls)}
                 </p>
@@ -223,9 +288,6 @@ export function VipUserDetailPage() {
           <section className={styles.card}>
             <div className={styles.cardHead}>
               <h2>Transaction History</h2>
-              <button type="button" className={styles.editLink}>
-                View All
-              </button>
             </div>
             <div className={styles.tableWrap}>
               <table className={styles.table}>
@@ -244,19 +306,20 @@ export function VipUserDetailPage() {
                         No transactions yet.
                       </td>
                     </tr>
-                  ) : null}
-                  {user.transactions.map(tx => (
-                    <tr key={tx.id}>
-                      <td>{tx.date}</td>
-                      <td>{tx.type}</td>
-                      <td>{formatInr(tx.amount)}</td>
-                      <td>
-                        <span className={styles.txSuccess}>
-                          {tx.status === 'success' ? 'Success' : tx.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  ) : (
+                    user.transactions.map(tx => (
+                      <tr key={tx.id}>
+                        <td>{tx.date}</td>
+                        <td>{tx.type}</td>
+                        <td>{formatInr(tx.amount)}</td>
+                        <td>
+                          <span className={styles.txSuccess}>
+                            {tx.status === 'success' ? 'Success' : tx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

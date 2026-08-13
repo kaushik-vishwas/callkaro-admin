@@ -1,13 +1,41 @@
-import {useMemo, useState} from 'react';
-import {CALLER_RANKINGS, formatInr, formatNumber} from '../../../data/analytics';
+import {useCallback, useEffect, useState} from 'react';
+import {ApiError} from '../../../api/client';
+import {
+  fetchAnalyticsCallers,
+  formatInr,
+  formatNumber,
+  type CallerRanking,
+} from '../../../api/analytics';
 import {AnalyticsPanel} from '../AnalyticsPage';
 import styles from '../AnalyticsPage.module.css';
 
 type Limit = 10 | 50 | 100;
+type Props = {rangeDays: number};
 
-export function CallersTab() {
+export function CallersTab({rangeDays}: Props) {
   const [limit, setLimit] = useState<Limit>(10);
-  const rows = useMemo(() => CALLER_RANKINGS.slice(0, Math.min(limit, CALLER_RANKINGS.length)), [limit]);
+  const [rows, setRows] = useState<CallerRanking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await fetchAnalyticsCallers(limit, rangeDays);
+      setRows(result.rankings || []);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to load callers.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [limit, rangeDays]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   return (
     <AnalyticsPanel
@@ -31,6 +59,8 @@ export function CallersTab() {
         </div>
       }
     >
+      {loading ? <p className={styles.panelSubtitle}>Loading rankings…</p> : null}
+      {error ? <p className={styles.panelSubtitle}>{error}</p> : null}
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -45,17 +75,25 @@ export function CallersTab() {
             </tr>
           </thead>
           <tbody>
-            {rows.map(row => (
-              <tr key={row.rank}>
-                <td className={styles.rank}>{row.rank}</td>
-                <td className={styles.strong}>{row.name}</td>
-                <td>{formatInr(row.totalSpend)}</td>
-                <td>{formatNumber(row.coinsPurchased)}</td>
-                <td>{formatNumber(row.callsMade)}</td>
-                <td>{row.talkTime}</td>
-                <td>{formatInr(row.lifetimeRevenue)}</td>
+            {!loading && rows.length === 0 ? (
+              <tr>
+                <td colSpan={7} className={styles.panelSubtitle}>
+                  No caller spend in this range.
+                </td>
               </tr>
-            ))}
+            ) : (
+              rows.map(row => (
+                <tr key={`${row.rank}-${row.name}`}>
+                  <td className={styles.rank}>{row.rank}</td>
+                  <td className={styles.strong}>{row.name}</td>
+                  <td>{formatInr(row.totalSpend)}</td>
+                  <td>{formatNumber(row.coinsPurchased)}</td>
+                  <td>{formatNumber(row.callsMade)}</td>
+                  <td>{row.talkTime}</td>
+                  <td>{formatInr(row.lifetimeRevenue)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

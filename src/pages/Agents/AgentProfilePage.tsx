@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Link, Navigate, useParams} from 'react-router-dom';
+import {Link, Navigate, useNavigate, useParams} from 'react-router-dom';
 import {
   ArrowLeft,
   Calendar,
@@ -16,6 +16,14 @@ import {
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
+import {
+  CallerConfirmModal,
+  CallerResetPasswordModal,
+} from '../../components/callers/CallerActionModal/CallerActionModal';
+import {
+  AgentCommissionLedgerModal,
+  AgentEditModal,
+} from '../../components/agents/AgentActionModal/AgentActionModal';
 import {AgentStatusBadge} from '../../components/agents/AgentStatusBadge/AgentStatusBadge';
 import {ReceiverStatusBadge} from '../../components/receivers/ReceiverStatusBadge/ReceiverStatusBadge';
 import {
@@ -27,6 +35,7 @@ import {
   type AdminAgentProfile,
 } from '../../api/agents';
 import {ApiError} from '../../api/client';
+import {downloadExcelSheet} from '../../utils/exportExcel';
 import styles from './AgentProfilePage.module.css';
 
 function EarningsTrendChart({
@@ -79,11 +88,19 @@ function EarningsTrendChart({
 
 export function AgentProfilePage() {
   const {agentId = ''} = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<AdminAgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [notFound, setNotFound] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
+  const [ledgerOpen, setLedgerOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!agentId) return;
@@ -113,36 +130,129 @@ export function AgentProfilePage() {
     return <Navigate to="/agents" replace />;
   }
 
-  async function onSuspend() {
+  async function onSaveEdit(payload: {
+    name: string;
+    email: string;
+    phone: string;
+  }) {
     if (!profile) return;
+    setActionBusy(true);
+    setActionError('');
+    try {
+      const result = await updateAgent(profile.id, payload);
+      setProfile(result.agent);
+      setEditOpen(false);
+      setActionMessage('Agent profile updated.');
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError ? err.message : 'Failed to update agent.',
+      );
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function onConfirmSuspend(_reason: string) {
+    if (!profile) return;
+    setActionBusy(true);
+    setActionError('');
     try {
       const result = await updateAgent(profile.id, {
         isActive: profile.status !== 'active',
       });
       setProfile(result.agent);
+      setSuspendOpen(false);
       setActionMessage(
         result.agent.status === 'active'
           ? 'Agent reactivated.'
           : 'Agent suspended.',
       );
     } catch (err) {
-      setError(
+      setActionError(
         err instanceof ApiError ? err.message : 'Failed to update agent.',
       );
+    } finally {
+      setActionBusy(false);
     }
   }
 
-  async function onResetPassword() {
+  async function onConfirmReset(password: string) {
     if (!profile) return;
+    setActionBusy(true);
+    setActionError('');
     try {
-      const result = await resetAgentPassword(profile.id);
-      setActionMessage(`New password: ${result.temporaryPassword}`);
+      const result = await resetAgentPassword(profile.id, password);
+      setResetPassword(result.temporaryPassword);
+      setActionMessage('Password reset successfully.');
     } catch (err) {
-      setError(
+      setActionError(
         err instanceof ApiError ? err.message : 'Failed to reset password.',
       );
+    } finally {
+      setActionBusy(false);
     }
   }
+
+  function onViewWithdrawals() {
+    if (!profile) return;
+    navigate(
+      `/withdrawals?agentId=${encodeURIComponent(profile.id)}&q=${encodeURIComponent(profile.name)}`,
+    );
+  }
+
+  function onExportData() {
+    if (!profile) return;
+    const rows: Array<Array<string | number>> = [
+      ['Field', 'Value'],
+      ['Agent ID', profile.id],
+      ['Code', profile.code],
+      ['Name', profile.name],
+      ['Email', profile.email],
+      ['Phone', profile.phone || ''],
+      ['Location', profile.location || ''],
+      ['Status', profile.status],
+      ['Joined', profile.joinedAt],
+      ['Last Active', profile.lastActive],
+      ['Rank', profile.rank],
+      ['Receivers', profile.receivers],
+      ['Revenue', profile.revenue],
+      ['Commission', profile.commission],
+      ['Pending', profile.pending],
+      ['Available Balance', profile.availableBalance],
+      ['Team Total Receivers', profile.team.totalReceivers],
+      ['Team Active', profile.team.activeReceivers],
+      ['Team Online', profile.team.onlineNow],
+      ['Team Blocked', profile.team.blocked],
+      ['Team Inactive', profile.team.inactive],
+      ['Lifetime Earnings', profile.commissionDashboard.lifetimeEarnings],
+      ['Total Revenue Generated', profile.commissionDashboard.totalRevenueGenerated],
+      ['Growth %', profile.revenueAnalytics.growthPct],
+      [],
+      ['Receiver Performance'],
+      ['Receiver', 'Calls', 'Coins', 'Revenue', 'Commission', 'Status'],
+      ...profile.receiverPerformance.map(row => [
+        row.name,
+        row.calls,
+        row.coinsEarned,
+        row.revenue,
+        row.commission,
+        row.status,
+      ]),
+      [],
+      ['Earnings Trend'],
+      ['Month', 'Value'],
+      ...profile.earningsTrend.map(row => [row.month, row.value]),
+    ];
+
+    downloadExcelSheet({
+      filename: `agent-${profile.code.replace('#', '') || profile.id}.xls`,
+      sheetName: 'Agent Data',
+      rows,
+    });
+    setActionMessage('Agent data exported.');
+  }
+
+  const isActive = profile?.status === 'active';
 
   return (
     <DashboardShell>
@@ -249,37 +359,61 @@ export function AgentProfilePage() {
                 <section className={styles.card}>
                   <h2 className={styles.cardTitle}>Admin Actions</h2>
                   <div className={styles.actions}>
-                    <button type="button" className={styles.actionInfo}>
+                    <button
+                      type="button"
+                      className={styles.actionInfo}
+                      onClick={() => {
+                        setActionError('');
+                        setEditOpen(true);
+                      }}
+                    >
                       <Pencil size={15} />
                       Edit Agent
                     </button>
                     <button
                       type="button"
                       className={styles.actionWarn}
-                      onClick={() => void onSuspend()}
+                      onClick={() => {
+                        setActionError('');
+                        setSuspendOpen(true);
+                      }}
                     >
                       <PauseCircle size={15} />
-                      {profile.status === 'active'
-                        ? 'Suspend Agent'
-                        : 'Activate Agent'}
+                      {isActive ? 'Suspend Agent' : 'Activate Agent'}
                     </button>
                     <button
                       type="button"
                       className={styles.action}
-                      onClick={() => void onResetPassword()}
+                      onClick={() => {
+                        setActionError('');
+                        setResetPassword('');
+                        setResetOpen(true);
+                      }}
                     >
                       <KeyRound size={15} />
                       Reset Password
                     </button>
-                    <button type="button" className={styles.action}>
+                    <button
+                      type="button"
+                      className={styles.action}
+                      onClick={() => setLedgerOpen(true)}
+                    >
                       <ScrollText size={15} />
                       Commission Ledger
                     </button>
-                    <button type="button" className={styles.action}>
+                    <button
+                      type="button"
+                      className={styles.action}
+                      onClick={onViewWithdrawals}
+                    >
                       <Wallet size={15} />
                       View Withdrawals
                     </button>
-                    <button type="button" className={styles.action}>
+                    <button
+                      type="button"
+                      className={styles.action}
+                      onClick={onExportData}
+                    >
                       <Download size={15} />
                       Export Agent Data
                     </button>
@@ -434,6 +568,51 @@ export function AgentProfilePage() {
           </>
         ) : null}
       </div>
+
+      {profile ? (
+        <>
+          <AgentEditModal
+            open={editOpen}
+            agent={profile}
+            busy={actionBusy}
+            error={actionError}
+            onClose={() => setEditOpen(false)}
+            onSave={payload => void onSaveEdit(payload)}
+          />
+          <CallerConfirmModal
+            open={suspendOpen}
+            title={isActive ? 'Suspend Agent' : 'Activate Agent'}
+            description={
+              isActive
+                ? `Suspend ${profile.name}? They will no longer be able to sign in.`
+                : `Reactivate ${profile.name}? They will regain agent panel access.`
+            }
+            confirmLabel={isActive ? 'Suspend' : 'Activate'}
+            tone={isActive ? 'warn' : 'default'}
+            busy={actionBusy}
+            error={actionError}
+            onClose={() => setSuspendOpen(false)}
+            onConfirm={reason => void onConfirmSuspend(reason)}
+          />
+          <CallerResetPasswordModal
+            open={resetOpen}
+            callerName={profile.name}
+            busy={actionBusy}
+            error={actionError}
+            resultPassword={resetPassword}
+            onClose={() => {
+              setResetOpen(false);
+              setResetPassword('');
+            }}
+            onConfirm={password => void onConfirmReset(password)}
+          />
+          <AgentCommissionLedgerModal
+            open={ledgerOpen}
+            agent={profile}
+            onClose={() => setLedgerOpen(false)}
+          />
+        </>
+      ) : null}
     </DashboardShell>
   );
 }

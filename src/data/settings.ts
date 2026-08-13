@@ -8,6 +8,7 @@ export type BankAccount = {
   country: string;
   accountType: 'savings' | 'current';
   verified: boolean;
+  reference?: string;
 };
 
 export type SettingsSectionId =
@@ -31,18 +32,6 @@ export const SETTINGS_SECTIONS: Array<{
   {id: 'help', label: 'Help & Support', to: '/settings/help'},
 ];
 
-export const CURRENT_BANK_ACCOUNT: BankAccount = {
-  accountHolder: 'Butch Jones',
-  bankName: 'HDFC Bank Limited',
-  iban: 'IN**************8831',
-  ibanMasked: 'IN**************8831',
-  swift: 'HDFCINBB',
-  branchName: 'Bandra West Branch',
-  country: 'India',
-  accountType: 'savings',
-  verified: true,
-};
-
 export const BANK_OPTIONS = [
   'HDFC Bank Limited',
   'ICICI Bank',
@@ -53,14 +42,6 @@ export const BANK_OPTIONS = [
 ];
 
 export const COUNTRY_OPTIONS = ['India', 'Bahrain', 'UAE', 'Saudi Arabia'];
-
-export const SETTINGS_PROFILE = {
-  name: 'Butch Jones',
-  role: 'Super Admin',
-  mobileMasked: '+91 *******452',
-  email: 'admin@callkaro.com',
-  status: 'Verified Client',
-};
 
 export const EMPTY_BANK_DRAFT: BankAccount = {
   accountHolder: '',
@@ -75,6 +56,8 @@ export const EMPTY_BANK_DRAFT: BankAccount = {
 };
 
 const DRAFT_KEY = 'callkaro_bank_draft';
+const BANK_CHALLENGE_KEY = 'callkaro_bank_challenge';
+const BANK_SUCCESS_KEY = 'callkaro_bank_success';
 
 export function loadBankDraft(): BankAccount {
   try {
@@ -92,4 +75,46 @@ export function saveBankDraft(draft: BankAccount) {
 
 export function clearBankDraft() {
   sessionStorage.removeItem(DRAFT_KEY);
+}
+
+export function saveBankChallengeToken(token: string) {
+  sessionStorage.setItem(BANK_CHALLENGE_KEY, token);
+}
+
+export function loadBankChallengeToken(): string | null {
+  return sessionStorage.getItem(BANK_CHALLENGE_KEY);
+}
+
+export function clearBankChallengeToken() {
+  sessionStorage.removeItem(BANK_CHALLENGE_KEY);
+}
+
+export function saveBankSuccessMeta(meta: {
+  reference: string;
+  updatedOnLabel: string;
+  updatedBy: string;
+}) {
+  sessionStorage.setItem(BANK_SUCCESS_KEY, JSON.stringify(meta));
+}
+
+export function loadBankSuccessMeta(): {
+  reference: string;
+  updatedOnLabel: string;
+  updatedBy: string;
+} | null {
+  try {
+    const raw = sessionStorage.getItem(BANK_SUCCESS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as {
+      reference: string;
+      updatedOnLabel: string;
+      updatedBy: string;
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function clearBankSuccessMeta() {
+  sessionStorage.removeItem(BANK_SUCCESS_KEY);
 }

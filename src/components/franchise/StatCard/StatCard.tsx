@@ -1,7 +1,15 @@
 import type {ReactNode} from 'react';
 import styles from './StatCard.module.css';
 
-export type StatTone = 'pink' | 'green' | 'gold' | 'red' | 'blue' | 'purple' | 'dark';
+export type StatTone =
+  | 'pink'
+  | 'green'
+  | 'gold'
+  | 'amber'
+  | 'red'
+  | 'blue'
+  | 'purple'
+  | 'dark';
 
 type StatCardProps = {
   label: string;

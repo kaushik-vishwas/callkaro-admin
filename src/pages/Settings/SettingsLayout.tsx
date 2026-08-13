@@ -1,7 +1,7 @@
 import type {ReactNode} from 'react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {SettingsSubnav} from '../../components/settings/SettingsSubnav/SettingsSubnav';
-import {SETTINGS_PROFILE} from '../../data/settings';
+import {useAuth} from '../../auth/AuthContext';
 import styles from './SettingsLayout.module.css';
 
 type SettingsLayoutProps = {
@@ -17,11 +17,18 @@ export function SettingsLayout({
   children,
   hideHeaderMeta = false,
 }: SettingsLayoutProps) {
+  const {admin} = useAuth();
+  const name = admin?.name || 'Admin';
+  const status = admin?.status || 'Active';
+
   return (
     <DashboardShell>
       <div className={styles.page}>
-        <SettingsSubnav />
-        <div className={styles.content}>
+        <div className={styles.topRow}>
+          <header className={styles.header}>
+            <h1 className={styles.title}>{title}</h1>
+            {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
+          </header>
           {!hideHeaderMeta ? (
             <div className={styles.topMeta}>
               <span className={styles.secureBadge}>
@@ -30,21 +37,18 @@ export function SettingsLayout({
               </span>
               <div className={styles.userMeta}>
                 <div>
-                  <p className={styles.userName}>{SETTINGS_PROFILE.name}</p>
-                  <p className={styles.userRole}>{SETTINGS_PROFILE.status}</p>
+                  <p className={styles.userName}>{name}</p>
+                  <p className={styles.userRole}>{status}</p>
                 </div>
-                <span className={styles.avatar}>
-                  {SETTINGS_PROFILE.name.slice(0, 1)}
-                </span>
+                <span className={styles.avatar}>{name.slice(0, 1)}</span>
               </div>
             </div>
           ) : null}
-          <header className={styles.header}>
-            <h1 className={styles.title}>{title}</h1>
-            {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
-          </header>
-          {children}
         </div>
+
+        <SettingsSubnav />
+
+        <div className={styles.content}>{children}</div>
       </div>
     </DashboardShell>
   );

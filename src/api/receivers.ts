@@ -42,6 +42,9 @@ export type AdminReceiverStats = {
 };
 
 export type AdminReceiverProfile = AdminReceiverListItem & {
+  age?: number;
+  level?: number;
+  bio?: string;
   availableBalance: number;
   withdrawnAmount: number;
   performance: {
@@ -136,12 +139,44 @@ export async function fetchReceiver(id: string) {
 export async function updateReceiverStatus(
   id: string,
   action: 'block' | 'suspend' | 'activate',
+  reason?: string,
 ) {
   return apiRequest<{receiver: AdminReceiverProfile}>(
     `/admin/receivers/${id}`,
     {
       method: 'PATCH',
-      body: JSON.stringify({action}),
+      body: JSON.stringify({action, reason}),
+    },
+  );
+}
+
+export async function updateReceiverProfile(
+  id: string,
+  payload: {
+    name?: string;
+    email?: string;
+    age?: number;
+    gender?: string;
+    level?: number;
+    bio?: string;
+    languages?: string[] | string;
+  },
+) {
+  return apiRequest<{receiver: AdminReceiverProfile}>(
+    `/admin/receivers/${id}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function assignReceiverAgent(id: string, agentId: string) {
+  return apiRequest<{receiver: AdminReceiverProfile}>(
+    `/admin/receivers/${id}/assign-agent`,
+    {
+      method: 'POST',
+      body: JSON.stringify({agentId}),
     },
   );
 }

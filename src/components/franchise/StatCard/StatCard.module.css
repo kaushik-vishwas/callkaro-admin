@@ -52,10 +52,12 @@
   color: #059669;
 }
 
-.tone_gold {
+.tone_gold,
+.tone_amber {
   border-bottom-color: #f59e0b;
 }
-.tone_gold .value {
+.tone_gold .value,
+.tone_amber .value {
   color: #d97706;
 }
 

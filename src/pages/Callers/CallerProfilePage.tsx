@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Link, Navigate, useParams} from 'react-router-dom';
+import {Link, Navigate, useNavigate, useParams} from 'react-router-dom';
 import {
   ArrowLeft,
   Ban,
@@ -12,19 +12,28 @@ import {
   MapPin,
   Calendar,
   Clock,
+  CheckCircle2,
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
 import {StatusBadge} from '../../components/callers/StatusBadge/StatusBadge';
 import {VipBadge} from '../../components/callers/VipBadge/VipBadge';
 import {
+  CallerConfirmModal,
+  CallerInfoModal,
+  CallerResetPasswordModal,
+} from '../../components/callers/CallerActionModal/CallerActionModal';
+import {
   fetchCaller,
   formatInr,
   formatNumber,
   resetCallerPassword,
+  updateCallerStatus,
   type AdminCallerProfile,
 } from '../../api/callers';
+import {fetchSupportTickets} from '../../api/supportTickets';
 import {ApiError} from '../../api/client';
+import {downloadExcelSheet} from '../../utils/exportExcel';
 import styles from './CallerProfilePage.module.css';
 
 function CallActivityChart({
@@ -76,13 +85,22 @@ function CallActivityChart({
   );
 }
 
+type DialogKind = 'block' | 'suspend' | 'activate' | 'reset' | null;
+
 export function CallerProfilePage() {
   const {callerId = ''} = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<AdminCallerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [notFound, setNotFound] = useState(false);
+  const [dialog, setDialog] = useState<DialogKind>(null);
+  const [dialogBusy, setDialogBusy] = useState(false);
+  const [dialogError, setDialogError] = useState('');
+  const [resetResult, setResetResult] = useState('');
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
 
   const load = useCallback(async () => {
     if (!callerId) return;
@@ -112,17 +130,144 @@ export function CallerProfilePage() {
     return <Navigate to="/callers" replace />;
   }
 
-  async function onResetPassword() {
-    if (!profile) return;
+  function closeDialog() {
+    if (dialogBusy) return;
+    setDialog(null);
+    setDialogError('');
+    setResetResult('');
+  }
+
+  async function onConfirmModeration(reason: string) {
+    if (!profile || (dialog !== 'block' && dialog !== 'suspend' && dialog !== 'activate')) {
+      return;
+    }
+    setDialogBusy(true);
+    setDialogError('');
     try {
-      const result = await resetCallerPassword(profile.id);
-      setActionMessage(`New password: ${result.temporaryPassword}`);
+      const result = await updateCallerStatus(profile.id, dialog, reason);
+      setProfile(result.caller);
+      setActionMessage(
+        dialog === 'block'
+          ? 'Caller blocked.'
+          : dialog === 'suspend'
+            ? 'Caller suspended.'
+            : 'Caller activated.',
+      );
+      setDialog(null);
+    } catch (err) {
+      setDialogError(
+        err instanceof ApiError ? err.message : 'Action failed.',
+      );
+    } finally {
+      setDialogBusy(false);
+    }
+  }
+
+  async function onConfirmReset(password: string) {
+    if (!profile) return;
+    if (password.trim().length < 6) {
+      setDialogError('Password must be at least 6 characters.');
+      return;
+    }
+    setDialogBusy(true);
+    setDialogError('');
+    try {
+      const result = await resetCallerPassword(profile.id, password.trim());
+      setResetResult(result.temporaryPassword);
+      setActionMessage('Caller password reset.');
+    } catch (err) {
+      setDialogError(
+        err instanceof ApiError ? err.message : 'Failed to reset password.',
+      );
+    } finally {
+      setDialogBusy(false);
+    }
+  }
+
+  async function onViewTickets() {
+    if (!profile) return;
+    setError('');
+    try {
+      if ((profile.ticketsRaised || 0) === 0) {
+        const result = await fetchSupportTickets({
+          q: profile.id,
+          role: 'caller',
+          page: 1,
+          limit: 1,
+        });
+        if (result.pagination.total === 0) {
+          setInfoMessage('No ticket raised.');
+          setInfoOpen(true);
+          return;
+        }
+      }
+      navigate(
+        `/tickets?mode=support&role=caller&q=${encodeURIComponent(profile.id)}`,
+      );
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : 'Failed to reset password.',
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to load tickets for this caller.',
       );
     }
   }
+
+  function onExportData() {
+    if (!profile) return;
+    const rows: Array<Array<string | number>> = [
+      ['Field', 'Value'],
+      ['Caller ID', profile.id],
+      ['Code', profile.code],
+      ['Name', profile.name],
+      ['Email', profile.email],
+      ['Phone', profile.phone || ''],
+      ['Location', profile.location || ''],
+      ['Status', profile.status],
+      ['VIP', profile.vip ? 'Yes' : 'No'],
+      ['Registered At', profile.registeredAt],
+      ['Last Active', profile.lastActive],
+      ['Coin Balance', profile.coins],
+      ['Total Recharge (INR)', profile.totalRecharge],
+      ['Calls Made', profile.calls],
+      ['Wallet Current Balance', profile.wallet.currentBalance],
+      ['Coins Purchased', profile.wallet.purchased],
+      ['Coins Consumed', profile.wallet.consumed],
+      ['Bonus Coins', profile.wallet.bonus],
+      ['Total Recharge Amount', profile.wallet.totalRechargeAmount],
+      ['Analytics Total Calls', profile.analytics.totalCalls],
+      ['Analytics Completed', profile.analytics.completed],
+      ['Analytics Missed', profile.analytics.missed],
+      ['Analytics Cancelled', profile.analytics.cancelled],
+      ['Avg Call Duration', profile.analytics.avgDuration],
+      ['Total Talk Time', profile.analytics.totalTalkTime],
+      ['Tickets Raised', profile.ticketsRaised],
+      ['Reports Submitted', profile.reportsSubmitted],
+      [],
+      ['Recent Calls'],
+      ['Receiver', 'Duration', 'Coins', 'Status'],
+      ...profile.recentCalls.map(call => [
+        call.receiver,
+        call.duration,
+        call.coins,
+        call.status,
+      ]),
+      [],
+      ['Weekly Activity'],
+      ['Day', 'Calls'],
+      ...profile.weeklyActivity.map(day => [day.day, day.calls]),
+    ];
+
+    downloadExcelSheet({
+      filename: `caller-${profile.code.replace('#', '') || profile.id}.xls`,
+      sheetName: 'Caller Data',
+      rows,
+    });
+    setActionMessage('Caller data exported.');
+  }
+
+  const needsActivate =
+    profile?.status === 'blocked' || profile?.status === 'suspended';
 
   return (
     <DashboardShell>
@@ -176,27 +321,69 @@ export function CallerProfilePage() {
               <section className={styles.card}>
                 <h2 className={styles.cardTitle}>Admin Actions</h2>
                 <div className={styles.actions}>
-                  <button type="button" className={styles.actionDanger}>
-                    <Ban size={15} />
-                    Block Caller
-                  </button>
-                  <button type="button" className={styles.actionWarn}>
-                    <PauseCircle size={15} />
-                    Suspend Caller
-                  </button>
+                  {needsActivate ? (
+                    <button
+                      type="button"
+                      className={styles.action}
+                      onClick={() => {
+                        setDialogError('');
+                        setDialog('activate');
+                      }}
+                    >
+                      <CheckCircle2 size={15} />
+                      Activate Caller
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className={styles.actionDanger}
+                        onClick={() => {
+                          setDialogError('');
+                          setDialog('block');
+                        }}
+                      >
+                        <Ban size={15} />
+                        Block Caller
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.actionWarn}
+                        onClick={() => {
+                          setDialogError('');
+                          setDialog('suspend');
+                        }}
+                      >
+                        <PauseCircle size={15} />
+                        Suspend Caller
+                      </button>
+                    </>
+                  )}
                   <button
                     type="button"
                     className={styles.action}
-                    onClick={() => void onResetPassword()}
+                    onClick={() => {
+                      setDialogError('');
+                      setResetResult('');
+                      setDialog('reset');
+                    }}
                   >
                     <KeyRound size={15} />
                     Reset Password
                   </button>
-                  <button type="button" className={styles.action}>
+                  <button
+                    type="button"
+                    className={styles.action}
+                    onClick={() => void onViewTickets()}
+                  >
                     <Ticket size={15} />
                     View Tickets
                   </button>
-                  <button type="button" className={styles.action}>
+                  <button
+                    type="button"
+                    className={styles.action}
+                    onClick={onExportData}
+                  >
                     <Download size={15} />
                     Export Data
                   </button>
@@ -377,6 +564,55 @@ export function CallerProfilePage() {
           </div>
         ) : null}
       </div>
+
+      <CallerConfirmModal
+        open={dialog === 'block'}
+        title="Block Caller"
+        description={`Block ${profile?.name || 'this caller'}? They will not be able to log in.`}
+        confirmLabel="Block Caller"
+        tone="danger"
+        busy={dialogBusy}
+        error={dialogError}
+        onClose={closeDialog}
+        onConfirm={onConfirmModeration}
+      />
+      <CallerConfirmModal
+        open={dialog === 'suspend'}
+        title="Suspend Caller"
+        description={`Suspend ${profile?.name || 'this caller'}? Access will be paused until activated again.`}
+        confirmLabel="Suspend Caller"
+        tone="warn"
+        busy={dialogBusy}
+        error={dialogError}
+        onClose={closeDialog}
+        onConfirm={onConfirmModeration}
+      />
+      <CallerConfirmModal
+        open={dialog === 'activate'}
+        title="Activate Caller"
+        description={`Restore access for ${profile?.name || 'this caller'}?`}
+        confirmLabel="Activate Caller"
+        tone="default"
+        busy={dialogBusy}
+        error={dialogError}
+        onClose={closeDialog}
+        onConfirm={onConfirmModeration}
+      />
+      <CallerResetPasswordModal
+        open={dialog === 'reset'}
+        callerName={profile?.name || 'caller'}
+        busy={dialogBusy}
+        error={dialogError}
+        resultPassword={resetResult}
+        onClose={closeDialog}
+        onConfirm={onConfirmReset}
+      />
+      <CallerInfoModal
+        open={infoOpen}
+        title="View Tickets"
+        message={infoMessage}
+        onClose={() => setInfoOpen(false)}
+      />
     </DashboardShell>
   );
 }

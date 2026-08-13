@@ -160,3 +160,48 @@ export async function resetAgentPassword(id: string, newPassword?: string) {
     },
   );
 }
+
+export type AgentCommissionLedgerEntry = {
+  id: string;
+  date: string;
+  dateIso: string | null;
+  receiverId: string;
+  receiverName: string;
+  source: string;
+  sourceLabel: string;
+  receiverEarnings: number;
+  commission: number;
+  coins: number;
+  referenceId: string;
+};
+
+export async function fetchAgentCommissionLedger(
+  id: string,
+  params: {
+    page?: number;
+    limit?: number;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {},
+) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    search.set(key, String(value));
+  });
+  const qs = search.toString();
+  return apiRequest<{
+    ledger: AgentCommissionLedgerEntry[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+    summary: {
+      totalCommission: number;
+      totalCommissionLabel: string;
+      entries: number;
+    };
+  }>(`/admin/agents/${encodeURIComponent(id)}/commission-ledger${qs ? `?${qs}` : ''}`);
+}

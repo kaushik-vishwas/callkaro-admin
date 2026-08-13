@@ -1,4 +1,4 @@
-import type {AgentStatus} from '../../../data/agents';
+import type {AgentStatus} from '../../../api/agents';
 import styles from './AgentStatusBadge.module.css';
 
 const labels: Record<AgentStatus, string> = {

@@ -1,21 +1,34 @@
-import {formatInr, NET_PROFIT} from '../../../data/analytics';
+import {useCallback, useEffect, useState} from 'react';
+import {ApiError} from '../../../api/client';
+import {
+  fetchAnalyticsNetProfit,
+  formatInr,
+  type WaterfallItem,
+} from '../../../api/analytics';
 import {AnalyticsPanel} from '../AnalyticsPage';
 import styles from '../AnalyticsPage.module.css';
 
-function WaterfallChart() {
+function WaterfallChart({waterfall}: {waterfall: WaterfallItem[]}) {
+  if (!waterfall.length) {
+    return <p className={styles.panelSubtitle}>No waterfall data.</p>;
+  }
   const WIDTH = 760;
   const HEIGHT = 280;
   const PAD = {top: 24, right: 16, bottom: 40, left: 48};
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
-  const max = 1000000;
-  const barW = innerW / NET_PROFIT.waterfall.length / 1.6;
+  const max = Math.max(
+    ...waterfall.map(item => Math.abs(item.value)),
+    waterfall.find(item => item.kind === 'start')?.value || 1,
+    1,
+  );
+  const barW = innerW / waterfall.length / 1.6;
 
   let running = 0;
-  const bars = NET_PROFIT.waterfall.map((item, index) => {
+  const bars = waterfall.map((item, index) => {
     const x =
       PAD.left +
-      (index + 0.5) * (innerW / NET_PROFIT.waterfall.length) -
+      (index + 0.5) * (innerW / waterfall.length) -
       barW / 2;
     let y = 0;
     let h = 0;
@@ -73,7 +86,48 @@ function WaterfallChart() {
   );
 }
 
-export function NetProfitTab() {
+type Props = {rangeDays: number};
+
+export function NetProfitTab({rangeDays}: Props) {
+  const [grossRevenue, setGrossRevenue] = useState(0);
+  const [totalDeductions, setTotalDeductions] = useState(0);
+  const [netRevenue, setNetRevenue] = useState(0);
+  const [netMargin, setNetMargin] = useState('0.0%');
+  const [waterfall, setWaterfall] = useState<WaterfallItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await fetchAnalyticsNetProfit(rangeDays);
+      const data = result.netProfit;
+      setGrossRevenue(data.grossRevenue || 0);
+      setTotalDeductions(data.totalDeductions || 0);
+      setNetRevenue(data.netRevenue || 0);
+      setNetMargin(data.netMargin || '0.0%');
+      setWaterfall(data.waterfall || []);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to load net profit.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [rangeDays]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) {
+    return <p className={styles.panelSubtitle}>Loading net profit…</p>;
+  }
+  if (error) {
+    return <p className={styles.panelSubtitle}>{error}</p>;
+  }
+
   return (
     <AnalyticsPanel
       title="Net Profit Analytics"
@@ -82,36 +136,35 @@ export function NetProfitTab() {
       <div className={styles.netKpis}>
         <article className={styles.netKpi}>
           <p className={styles.netKpiLabel}>Gross Revenue</p>
-          <p className={styles.netKpiValue}>
-            {formatInr(NET_PROFIT.grossRevenue)}
-          </p>
+          <p className={styles.netKpiValue}>{formatInr(grossRevenue)}</p>
         </article>
         <article className={styles.netKpi}>
           <p className={styles.netKpiLabel}>Total Deductions</p>
-          <p className={styles.netKpiValue}>
-            {formatInr(NET_PROFIT.totalDeductions)}
-          </p>
+          <p className={styles.netKpiValue}>{formatInr(totalDeductions)}</p>
         </article>
         <article className={styles.netKpi}>
           <p className={styles.netKpiLabel}>Net Revenue</p>
-          <p className={styles.netKpiValue}>
-            {formatInr(NET_PROFIT.netRevenue)}
-          </p>
+          <p className={styles.netKpiValue}>{formatInr(netRevenue)}</p>
         </article>
         <article className={styles.netKpi}>
           <p className={styles.netKpiLabel}>Net Margin</p>
-          <p className={styles.netKpiValue}>{NET_PROFIT.netMargin}</p>
+          <p className={styles.netKpiValue}>{netMargin}</p>
         </article>
       </div>
 
-      <div className={styles.panelHead} style={{borderTop: '1px solid var(--color-border)'}}>
-        <h3 className={styles.panelTitle}>Revenue Waterfall — Deduction Breakdown</h3>
+      <div
+        className={styles.panelHead}
+        style={{borderTop: '1px solid var(--color-border)'}}
+      >
+        <h3 className={styles.panelTitle}>
+          Revenue Waterfall — Deduction Breakdown
+        </h3>
       </div>
       <div className={styles.chartWrap}>
-        <WaterfallChart />
+        <WaterfallChart waterfall={waterfall} />
       </div>
       <div className={styles.waterfallLabels}>
-        {NET_PROFIT.waterfall.map(item => (
+        {waterfall.map(item => (
           <div
             key={item.id}
             className={

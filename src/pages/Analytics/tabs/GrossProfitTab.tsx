@@ -1,8 +1,15 @@
-import {formatInr, GROSS_PROFIT} from '../../../data/analytics';
+import {useCallback, useEffect, useState} from 'react';
+import {ApiError} from '../../../api/client';
+import {
+  fetchAnalyticsGrossProfit,
+  formatInr,
+  type GrossMonthly,
+  type GrossSplit,
+} from '../../../api/analytics';
 import {AnalyticsPanel} from '../AnalyticsPage';
 import styles from '../AnalyticsPage.module.css';
 
-function DonutChart() {
+function DonutChart({split}: {split: GrossSplit[]}) {
   const size = 220;
   const stroke = 28;
   const radius = (size - stroke) / 2;
@@ -10,6 +17,9 @@ function DonutChart() {
   const cy = size / 2;
   const circumference = 2 * Math.PI * radius;
   let offset = 0;
+  if (!split.length) {
+    return <p className={styles.panelSubtitle}>No split data.</p>;
+  }
 
   return (
     <svg
@@ -19,7 +29,7 @@ function DonutChart() {
       aria-label="Revenue split"
       style={{maxWidth: 240, margin: '0 auto', display: 'block', padding: 16}}
     >
-      {GROSS_PROFIT.split.map(slice => {
+      {split.map(slice => {
         const length = (slice.percent / 100) * circumference;
         const el = (
           <circle
@@ -58,17 +68,20 @@ function DonutChart() {
   );
 }
 
-function StackedBarChart() {
+function StackedBarChart({monthly}: {monthly: GrossMonthly[]}) {
+  if (!monthly.length) {
+    return <p className={styles.panelSubtitle}>No monthly data yet.</p>;
+  }
   const WIDTH = 640;
   const HEIGHT = 260;
   const PAD = {top: 20, right: 16, bottom: 36, left: 48};
   const innerW = WIDTH - PAD.left - PAD.right;
   const innerH = HEIGHT - PAD.top - PAD.bottom;
   const max = Math.max(
-    ...GROSS_PROFIT.monthly.map(m => m.platform + m.receiver + m.agent),
+    ...monthly.map(m => m.platform + m.receiver + m.agent),
     1,
   );
-  const barW = innerW / GROSS_PROFIT.monthly.length / 1.8;
+  const barW = innerW / monthly.length / 1.8;
 
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={styles.chartSvg} role="img">
@@ -90,10 +103,10 @@ function StackedBarChart() {
           </g>
         );
       })}
-      {GROSS_PROFIT.monthly.map((month, index) => {
+      {monthly.map((month, index) => {
         const x =
           PAD.left +
-          (index + 0.5) * (innerW / GROSS_PROFIT.monthly.length) -
+          (index + 0.5) * (innerW / monthly.length) -
           barW / 2;
         const hPlatform = (month.platform / max) * innerH;
         const hReceiver = (month.receiver / max) * innerH;
@@ -106,11 +119,7 @@ function StackedBarChart() {
             <rect x={x} y={yPlatform} width={barW} height={hPlatform} fill="#1e3a8a" rx={2} />
             <rect x={x} y={yReceiver} width={barW} height={hReceiver} fill="#ec4899" />
             <rect x={x} y={yAgent} width={barW} height={hAgent} fill="#f59e0b" rx={2} />
-            <text
-              x={x + barW / 2}
-              y={HEIGHT - 12}
-              className={styles.chartLabel}
-            >
+            <text x={x + barW / 2} y={HEIGHT - 12} className={styles.chartLabel}>
               {month.label}
             </text>
           </g>
@@ -120,29 +129,64 @@ function StackedBarChart() {
   );
 }
 
-export function GrossProfitTab() {
+type Props = {rangeDays: number};
+
+export function GrossProfitTab({rangeDays}: Props) {
+  const [totalGrossRevenue, setTotalGrossRevenue] = useState(0);
+  const [netPlatformShare, setNetPlatformShare] = useState(0);
+  const [split, setSplit] = useState<GrossSplit[]>([]);
+  const [monthly, setMonthly] = useState<GrossMonthly[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await fetchAnalyticsGrossProfit(rangeDays);
+      const data = result.grossProfit;
+      setTotalGrossRevenue(data.totalGrossRevenue || 0);
+      setNetPlatformShare(data.netPlatformShare || 0);
+      setSplit(data.split || []);
+      setMonthly(data.monthly || []);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to load gross profit.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [rangeDays]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) {
+    return <p className={styles.panelSubtitle}>Loading gross profit…</p>;
+  }
+  if (error) {
+    return <p className={styles.panelSubtitle}>{error}</p>;
+  }
+
   return (
     <>
       <div className={styles.grossTop}>
         <article className={styles.grossBig}>
           <p className={styles.grossBigLabel}>Total Gross Revenue</p>
-          <p className={styles.grossBigValue}>
-            {formatInr(GROSS_PROFIT.totalGrossRevenue)}
-          </p>
+          <p className={styles.grossBigValue}>{formatInr(totalGrossRevenue)}</p>
         </article>
         <article className={styles.grossBig}>
           <p className={styles.grossBigLabel}>Net Platform Share</p>
-          <p className={styles.grossBigValue}>
-            {formatInr(GROSS_PROFIT.netPlatformShare)}
-          </p>
+          <p className={styles.grossBigValue}>{formatInr(netPlatformShare)}</p>
         </article>
       </div>
 
       <div className={styles.grossCharts}>
         <AnalyticsPanel title="Revenue Split">
-          <DonutChart />
+          <DonutChart split={split} />
           <ul className={styles.legend}>
-            {GROSS_PROFIT.split.map(slice => (
+            {split.map(slice => (
               <li key={slice.id} className={styles.legendItem}>
                 <span className={styles.legendLeft}>
                   <span
@@ -159,7 +203,7 @@ export function GrossProfitTab() {
 
         <AnalyticsPanel title="Gross Profit Stacked Bar">
           <div className={styles.chartWrap}>
-            <StackedBarChart />
+            <StackedBarChart monthly={monthly} />
           </div>
         </AnalyticsPanel>
       </div>

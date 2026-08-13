@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {ChevronLeft, ChevronRight, MoreVertical, Search} from 'lucide-react';
+import {Link, Navigate, useSearchParams} from 'react-router-dom';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
 import {
@@ -34,7 +35,14 @@ const PAGE_SIZE = 10;
 type Mode = 'support' | 'reports';
 
 export function TicketsPage() {
-  const [mode, setMode] = useState<Mode>('support');
+  const [searchParams] = useSearchParams();
+  const initialMode =
+    searchParams.get('mode') === 'reports' ? 'reports' : 'support';
+  const initialRole =
+    searchParams.get('role') === 'receiver' ? 'receiver' : 'caller';
+  const initialQuery = searchParams.get('q') || '';
+
+  const [mode, setMode] = useState<Mode>(initialMode);
 
   const [supportTickets, setSupportTickets] = useState<SupportTicketItem[]>([]);
   const [supportStats, setSupportStats] = useState<SupportTicketStats | null>(
@@ -43,9 +51,9 @@ export function TicketsPage() {
   const [reportTickets, setReportTickets] = useState<TicketItem[]>([]);
   const [reportStats, setReportStats] = useState<TicketStats | null>(null);
 
-  const [userType, setUserType] = useState<'caller' | 'receiver'>('caller');
-  const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [userType, setUserType] = useState<'caller' | 'receiver'>(initialRole);
+  const [query, setQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery.trim());
   const [supportStatus, setSupportStatus] = useState<
     'all' | SupportTicketStatus
   >('all');
@@ -64,6 +72,19 @@ export function TicketsPage() {
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState('');
+
+  useEffect(() => {
+    const nextMode =
+      searchParams.get('mode') === 'reports' ? 'reports' : 'support';
+    const nextRole =
+      searchParams.get('role') === 'receiver' ? 'receiver' : 'caller';
+    const nextQuery = searchParams.get('q') || '';
+    setMode(nextMode);
+    setUserType(nextRole);
+    setQuery(nextQuery);
+    setDebouncedQuery(nextQuery.trim());
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
@@ -147,12 +168,19 @@ export function TicketsPage() {
   }
 
   function onModeChange(next: Mode) {
+    if (next === 'reports') {
+      return;
+    }
     setMode(next);
     setPage(1);
     setMenuOpenId(null);
     setSelectedSupportId(null);
     setSelectedReportId(null);
     setActionError('');
+  }
+
+  if (mode === 'reports' || searchParams.get('mode') === 'reports') {
+    return <Navigate to="/compliance/detected-profiles" replace />;
   }
 
   function onTabChange(next: 'caller' | 'receiver') {
@@ -263,16 +291,9 @@ export function TicketsPage() {
             >
               Support Tickets
             </button>
-            <button
-              type="button"
-              className={[
-                styles.modeTab,
-                mode === 'reports' ? styles.modeTabActive : '',
-              ].join(' ')}
-              onClick={() => onModeChange('reports')}
-            >
-              Chat Reports
-            </button>
+            <Link to="/compliance/detected-profiles" className={styles.modeTab}>
+              Chat Reports → Compliance
+            </Link>
           </div>
         </header>
 
@@ -371,8 +392,8 @@ export function TicketsPage() {
                     }}
                   >
                     <option value="all">All</option>
-                    <option value="open">Open</option>
-                    <option value="in_review">In Review</option>
+                    <option value="open">Open / In Review</option>
+                    <option value="in_review">In Review only</option>
                     <option value="solved">Solved</option>
                     <option value="closed">Closed</option>
                   </select>

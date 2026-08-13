@@ -1,5 +1,5 @@
 import {TrendingUp} from 'lucide-react';
-import type {KpiItem} from '../../../data/dashboard';
+import type {KpiItem} from '../../../api/dashboard';
 import styles from './KpiCard.module.css';
 
 export function KpiCard({item}: {item: KpiItem}) {

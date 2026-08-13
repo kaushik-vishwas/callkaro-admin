@@ -44,7 +44,9 @@ export function Sidebar() {
         </div>
         <div className={styles.profileText}>
           <p className={styles.profileName}>{admin?.name || 'Admin'}</p>
-          <p className={styles.profileRole}>SUPER ADMIN</p>
+          <p className={styles.profileRole}>
+            {(admin?.role || 'Super Admin').toUpperCase()}
+          </p>
         </div>
       </div>
     </aside>

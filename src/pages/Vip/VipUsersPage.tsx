@@ -1,16 +1,19 @@
-import {useMemo, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
 import {ChevronLeft, ChevronRight, Download, Search} from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
 import {VipSubnav} from '../../components/vip/VipSubnav/VipSubnav';
+import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
+import {ApiError} from '../../api/client';
 import {
+  fetchVipUsers,
   formatInr,
   formatNumber,
-  VIP_DIRECTORY_STATS,
-  VIP_USERS,
+  type VipDirectoryStats,
+  type VipUser,
   type VipUserStatus,
-} from '../../data/vip';
+} from '../../api/vip';
 import styles from './VipUsersPage.module.css';
 
 type TabFilter = 'all' | 'vip' | VipUserStatus;
@@ -25,6 +28,14 @@ const tabs: Array<{id: TabFilter; label: string}> = [
   {id: 'suspended', label: 'Suspended'},
 ];
 
+const EMPTY_STATS: VipDirectoryStats = {
+  totalCallers: 0,
+  activeCallers: 0,
+  vipCallers: 0,
+  totalRevenueLabel: '₹ 0',
+  avgRevenueLabel: '₹ 0',
+};
+
 function statusLabel(status: VipUserStatus) {
   if (status === 'active') return 'ACTIVE';
   if (status === 'blocked') return 'BLOCKED';
@@ -33,31 +44,52 @@ function statusLabel(status: VipUserStatus) {
 
 export function VipUsersPage() {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [tab, setTab] = useState<TabFilter>('vip');
   const [page, setPage] = useState(1);
   const [jump, setJump] = useState('1');
+  const [users, setUsers] = useState<VipUser[]>([]);
+  const [stats, setStats] = useState<VipDirectoryStats>(EMPTY_STATS);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return VIP_USERS.filter(user => {
-      if (tab === 'active' || tab === 'blocked' || tab === 'suspended') {
-        if (user.status !== tab) return false;
-      }
-      if (!q) return true;
-      return (
-        user.name.toLowerCase().includes(q) ||
-        user.code.toLowerCase().includes(q) ||
-        user.phone.toLowerCase().includes(q)
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => window.clearTimeout(id);
+  }, [query]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await fetchVipUsers({
+        q: debouncedQuery || undefined,
+        tab,
+        page,
+        limit: PAGE_SIZE,
+      });
+      setUsers(result.users || []);
+      setStats(result.stats || EMPTY_STATS);
+      setTotal(result.pagination?.total || 0);
+      setTotalPages(result.pagination?.totalPages || 1);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to load VIP users.',
       );
-    });
-  }, [query, tab]);
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedQuery, tab, page]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   const safePage = Math.min(page, totalPages);
-  const start = filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
-  const end = Math.min(safePage * PAGE_SIZE, filtered.length);
-  const rows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const stats = VIP_DIRECTORY_STATS;
+  const start = total === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const end = Math.min(safePage * PAGE_SIZE, total);
 
   function goToPage(next: number) {
     const clamped = Math.min(totalPages, Math.max(1, next));
@@ -78,7 +110,7 @@ export function VipUsersPage() {
       'Status',
       'Last Active',
     ];
-    const lines = filtered.map(row =>
+    const lines = users.map(row =>
       [
         row.name,
         row.code,
@@ -123,6 +155,8 @@ export function VipUsersPage() {
             </button>
           </div>
         </header>
+
+        {error ? <p className={styles.subtitle}>{error}</p> : null}
 
         <section className={styles.statGrid}>
           <StatCard
@@ -205,52 +239,64 @@ export function VipUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={10} className={styles.empty}>
+                      <EmptyTableState label="Loading VIP users..." />
+                    </td>
+                  </tr>
+                ) : users.length === 0 ? (
                   <tr>
                     <td colSpan={10} className={styles.empty}>
                       No VIP users match your filters.
                     </td>
                   </tr>
-                ) : null}
-                {rows.map(row => (
-                  <tr key={row.id}>
-                    <td>
-                      <Link to={`/vip/users/${row.id}`} className={styles.userLink}>
-                        <span className={styles.avatar}>
-                          {row.name.slice(0, 1)}
+                ) : (
+                  users.map(row => (
+                    <tr key={row.id}>
+                      <td>
+                        <Link
+                          to={`/vip/users/${row.id}`}
+                          className={styles.userLink}
+                        >
+                          <span className={styles.avatar}>
+                            {row.name.slice(0, 1)}
+                          </span>
+                          <span className={styles.strong}>{row.name}</span>
+                        </Link>
+                      </td>
+                      <td className={styles.code}>{row.code}</td>
+                      <td>{row.phone || '—'}</td>
+                      <td>{row.regDate}</td>
+                      <td>{formatNumber(row.coins)}</td>
+                      <td>{formatInr(row.totalRecharge)}</td>
+                      <td>{formatNumber(row.calls)}</td>
+                      <td>
+                        <span className={styles.vipBadge}>
+                          {row.vipPlan || 'VIP'}
                         </span>
-                        <span className={styles.strong}>{row.name}</span>
-                      </Link>
-                    </td>
-                    <td className={styles.code}>{row.code}</td>
-                    <td>{row.phone}</td>
-                    <td>{row.regDate}</td>
-                    <td>{formatNumber(row.coins)}</td>
-                    <td>{formatInr(row.totalRecharge)}</td>
-                    <td>{formatNumber(row.calls)}</td>
-                    <td>
-                      <span className={styles.vipBadge}>VIP</span>
-                    </td>
-                    <td>
-                      <span
-                        className={[
-                          styles.status,
-                          styles[`status_${row.status}`],
-                        ].join(' ')}
-                      >
-                        {statusLabel(row.status)}
-                      </span>
-                    </td>
-                    <td>{row.lastActive}</td>
-                  </tr>
-                ))}
+                      </td>
+                      <td>
+                        <span
+                          className={[
+                            styles.status,
+                            styles[`status_${row.status}`],
+                          ].join(' ')}
+                        >
+                          {statusLabel(row.status)}
+                        </span>
+                      </td>
+                      <td>{row.lastActive}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
           <div className={styles.pagination}>
             <p className={styles.showing}>
-              Showing {start} to {end} of {filtered.length}
+              Showing {start} to {end} of {total}
             </p>
             <div className={styles.pages}>
               <button
@@ -261,19 +307,21 @@ export function VipUsersPage() {
               >
                 <ChevronLeft size={16} />
               </button>
-              {Array.from({length: totalPages}, (_, i) => i + 1).map(number => (
-                <button
-                  key={number}
-                  type="button"
-                  className={[
-                    styles.pageBtn,
-                    number === safePage ? styles.pageActive : '',
-                  ].join(' ')}
-                  onClick={() => goToPage(number)}
-                >
-                  {number}
-                </button>
-              ))}
+              {Array.from({length: totalPages}, (_, i) => i + 1)
+                .slice(0, 8)
+                .map(number => (
+                  <button
+                    key={number}
+                    type="button"
+                    className={[
+                      styles.pageBtn,
+                      number === safePage ? styles.pageActive : '',
+                    ].join(' ')}
+                    onClick={() => goToPage(number)}
+                  >
+                    {number}
+                  </button>
+                ))}
               <button
                 type="button"
                 className={styles.pageBtn}

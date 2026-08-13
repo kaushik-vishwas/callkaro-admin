@@ -7,10 +7,11 @@ import {
   Store,
   ShieldCheck,
   Ticket,
-  ArrowLeftRight,
+  ArrowLeftRight,   
   Wallet,
   Crown,
   BarChart3,
+  ShieldAlert,
   Settings,
 } from 'lucide-react';
 
@@ -34,5 +35,6 @@ export const adminNavItems: NavItem[] = [
   {id: 'withdrawals', label: 'Withdrawals', to: '/withdrawals', icon: Wallet, ready: true},
   {id: 'vip', label: 'VIP', to: '/vip', icon: Crown, ready: true},
   {id: 'analytics', label: 'Analytics', to: '/analytics', icon: BarChart3, ready: true},
+  {id: 'compliance', label: 'Compliance', to: '/compliance', icon: ShieldAlert, ready: true},
   {id: 'settings', label: 'Settings', to: '/settings', icon: Settings, ready: true},
 ];

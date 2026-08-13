@@ -17,61 +17,71 @@ type AnalyticsPageProps = {
   tab: AnalyticsTabId;
 };
 
-const titles: Record<
-  AnalyticsTabId,
-  {title: string; subtitle: string}
-> = {
+const titles: Record<AnalyticsTabId, {title: string; subtitle: string}> = {
   overview: {
     title: 'Enterprise Dashboard',
     subtitle: "Real-time oversight of Callkaro's global ecosystem.",
   },
   packages: {
     title: 'Revenue Intelligence',
-    subtitle: 'Complete financial control center — trace every ₹ from recharge to profit.',
+    subtitle:
+      'Complete financial control center — trace every ₹ from recharge to profit.',
   },
   callers: {
     title: 'Revenue Intelligence',
-    subtitle: 'Complete financial control center — trace every ₹ from recharge to profit.',
+    subtitle:
+      'Complete financial control center — trace every ₹ from recharge to profit.',
   },
   receivers: {
     title: 'Revenue Intelligence',
-    subtitle: 'Complete financial control center — trace every ₹ from recharge to profit.',
+    subtitle:
+      'Complete financial control center — trace every ₹ from recharge to profit.',
   },
   agents: {
     title: 'Revenue Intelligence',
-    subtitle: 'Complete financial control center — trace every ₹ from recharge to profit.',
+    subtitle:
+      'Complete financial control center — trace every ₹ from recharge to profit.',
   },
   'gross-profit': {
     title: 'Revenue Intelligence',
-    subtitle: 'Complete financial control center — trace every ₹ from recharge to profit.',
+    subtitle:
+      'Complete financial control center — trace every ₹ from recharge to profit.',
   },
   'net-profit': {
     title: 'Revenue Intelligence',
-    subtitle: 'Complete financial control center — trace every ₹ from recharge to profit.',
+    subtitle:
+      'Complete financial control center — trace every ₹ from recharge to profit.',
   },
 };
 
-function TabContent({tab}: {tab: AnalyticsTabId}) {
+function TabContent({
+  tab,
+  rangeDays,
+}: {
+  tab: AnalyticsTabId;
+  rangeDays: number;
+}) {
   switch (tab) {
     case 'packages':
-      return <PackagesTab />;
+      return <PackagesTab rangeDays={rangeDays} />;
     case 'callers':
-      return <CallersTab />;
+      return <CallersTab rangeDays={rangeDays} />;
     case 'receivers':
-      return <ReceiversTab />;
+      return <ReceiversTab rangeDays={rangeDays} />;
     case 'agents':
-      return <AgentsTab />;
+      return <AgentsTab rangeDays={rangeDays} />;
     case 'gross-profit':
-      return <GrossProfitTab />;
+      return <GrossProfitTab rangeDays={rangeDays} />;
     case 'net-profit':
-      return <NetProfitTab />;
+      return <NetProfitTab rangeDays={rangeDays} />;
     default:
-      return <OverviewTab />;
+      return <OverviewTab rangeDays={rangeDays} />;
   }
 }
 
 export function AnalyticsPage({tab}: AnalyticsPageProps) {
   const [range, setRange] = useState('30');
+  const rangeDays = Number(range) || 30;
   const meta = titles[tab];
 
   return (
@@ -91,7 +101,7 @@ export function AnalyticsPage({tab}: AnalyticsPageProps) {
                 <option value="365">Last Year</option>
               </select>
             </label>
-            <button type="button" className={styles.exportBtn}>
+            <button type="button" className={styles.exportBtn} disabled>
               <Download size={15} />
               Export PDF
             </button>
@@ -99,7 +109,7 @@ export function AnalyticsPage({tab}: AnalyticsPageProps) {
         </header>
 
         <AnalyticsSubnav />
-        <TabContent tab={tab} />
+        <TabContent tab={tab} rangeDays={rangeDays} />
       </div>
     </DashboardShell>
   );

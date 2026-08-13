@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Link, Navigate, useParams} from 'react-router-dom';
+import {Link, Navigate, useNavigate, useParams} from 'react-router-dom';
 import {
   ArrowLeft,
   Ban,
@@ -13,14 +13,22 @@ import {
   UserPlus,
   Wallet,
   Calendar,
+  CheckCircle2,
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
+import {CallerConfirmModal} from '../../components/callers/CallerActionModal/CallerActionModal';
+import {
+  ReceiverAssignAgentModal,
+  ReceiverEditModal,
+} from '../../components/receivers/ReceiverActionModal/ReceiverActionModal';
 import {ReceiverStatusBadge} from '../../components/receivers/ReceiverStatusBadge/ReceiverStatusBadge';
 import {
+  assignReceiverAgent,
   fetchReceiver,
   formatInr,
   formatNumber,
+  updateReceiverProfile,
   updateReceiverStatus,
   type AdminReceiverProfile,
 } from '../../api/receivers';
@@ -75,13 +83,23 @@ function RevenueTrendChart({
   );
 }
 
+function formatOnlineHours(value: number) {
+  return `${Number(value || 0).toFixed(2)}h`;
+}
+
+type DialogKind = 'block' | 'suspend' | 'activate' | 'edit' | 'assign' | null;
+
 export function ReceiverProfilePage() {
   const {receiverId = ''} = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<AdminReceiverProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [notFound, setNotFound] = useState(false);
+  const [dialog, setDialog] = useState<DialogKind>(null);
+  const [dialogBusy, setDialogBusy] = useState(false);
+  const [dialogError, setDialogError] = useState('');
 
   const load = useCallback(async () => {
     if (!receiverId) return;
@@ -111,24 +129,94 @@ export function ReceiverProfilePage() {
     return <Navigate to="/receivers" replace />;
   }
 
-  async function onAction(action: 'block' | 'suspend' | 'activate') {
-    if (!profile) return;
+  function closeDialog() {
+    if (dialogBusy) return;
+    setDialog(null);
+    setDialogError('');
+  }
+
+  async function onConfirmModeration(reason: string) {
+    if (
+      !profile ||
+      (dialog !== 'block' && dialog !== 'suspend' && dialog !== 'activate')
+    ) {
+      return;
+    }
+    setDialogBusy(true);
+    setDialogError('');
     try {
-      const result = await updateReceiverStatus(profile.id, action);
+      const result = await updateReceiverStatus(profile.id, dialog, reason);
       setProfile(result.receiver);
       setActionMessage(
-        action === 'block'
+        dialog === 'block'
           ? 'Receiver blocked.'
-          : action === 'suspend'
+          : dialog === 'suspend'
             ? 'Receiver suspended.'
             : 'Receiver activated.',
       );
+      setDialog(null);
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : 'Failed to update receiver.',
+      setDialogError(
+        err instanceof ApiError ? err.message : 'Action failed.',
       );
+    } finally {
+      setDialogBusy(false);
     }
   }
+
+  async function onSaveProfile(payload: {
+    name: string;
+    email: string;
+    age: number;
+    gender: string;
+    level: number;
+    bio: string;
+    languages: string;
+  }) {
+    if (!profile) return;
+    setDialogBusy(true);
+    setDialogError('');
+    try {
+      const result = await updateReceiverProfile(profile.id, payload);
+      setProfile(result.receiver);
+      setActionMessage('Receiver profile updated.');
+      setDialog(null);
+    } catch (err) {
+      setDialogError(
+        err instanceof ApiError ? err.message : 'Failed to save profile.',
+      );
+    } finally {
+      setDialogBusy(false);
+    }
+  }
+
+  async function onAssignAgent(agentId: string) {
+    if (!profile) return;
+    setDialogBusy(true);
+    setDialogError('');
+    try {
+      const result = await assignReceiverAgent(profile.id, agentId);
+      setProfile(result.receiver);
+      setActionMessage('Agent assigned successfully.');
+      setDialog(null);
+    } catch (err) {
+      setDialogError(
+        err instanceof ApiError ? err.message : 'Failed to assign agent.',
+      );
+    } finally {
+      setDialogBusy(false);
+    }
+  }
+
+  function onViewWithdrawals() {
+    if (!profile) return;
+    navigate(
+      `/withdrawals?q=${encodeURIComponent(profile.id)}&receiverId=${encodeURIComponent(profile.id)}`,
+    );
+  }
+
+  const needsActivate =
+    profile?.status === 'blocked' || profile?.status === 'inactive';
 
   return (
     <DashboardShell>
@@ -228,38 +316,70 @@ export function ReceiverProfilePage() {
               <section className={styles.card}>
                 <h2 className={styles.cardTitle}>Admin Actions</h2>
                 <div className={styles.actions}>
-                  <button type="button" className={styles.actionInfo}>
+                  <button
+                    type="button"
+                    className={styles.actionInfo}
+                    onClick={() => {
+                      setDialogError('');
+                      setDialog('edit');
+                    }}
+                  >
                     <Pencil size={15} />
                     Edit Receiver
                   </button>
-                  <button
-                    type="button"
-                    className={styles.actionWarn}
-                    onClick={() =>
-                      void onAction(
-                        profile.status === 'active' ? 'suspend' : 'activate',
-                      )
-                    }
-                  >
-                    <PauseCircle size={15} />
-                    {profile.status === 'active'
-                      ? 'Suspend Receiver'
-                      : 'Activate Receiver'}
-                  </button>
+                  {needsActivate ? (
+                    <button
+                      type="button"
+                      className={styles.actionWarn}
+                      onClick={() => {
+                        setDialogError('');
+                        setDialog('activate');
+                      }}
+                    >
+                      <CheckCircle2 size={15} />
+                      Activate Receiver
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.actionWarn}
+                      onClick={() => {
+                        setDialogError('');
+                        setDialog('suspend');
+                      }}
+                    >
+                      <PauseCircle size={15} />
+                      Suspend Receiver
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={styles.actionDanger}
-                    onClick={() => void onAction('block')}
+                    onClick={() => {
+                      setDialogError('');
+                      setDialog('block');
+                    }}
                     disabled={profile.status === 'blocked'}
                   >
                     <Ban size={15} />
                     Block Receiver
                   </button>
-                  <button type="button" className={styles.action}>
+                  <button
+                    type="button"
+                    className={styles.action}
+                    onClick={() => {
+                      setDialogError('');
+                      setDialog('assign');
+                    }}
+                  >
                     <UserPlus size={15} />
                     Assign New Agent
                   </button>
-                  <button type="button" className={styles.action}>
+                  <button
+                    type="button"
+                    className={styles.action}
+                    onClick={onViewWithdrawals}
+                  >
                     <Wallet size={15} />
                     View Withdrawals
                   </button>
@@ -337,7 +457,9 @@ export function ReceiverProfilePage() {
                     </div>
                     <div>
                       <dt>Online Hours</dt>
-                      <dd>{profile.performance.onlineHours}h</dd>
+                      <dd>
+                        {formatOnlineHours(profile.performance.onlineHours)}
+                      </dd>
                     </div>
                   </dl>
                 </section>
@@ -351,7 +473,7 @@ export function ReceiverProfilePage() {
               </section>
 
               <div className={styles.twoCol}>
-                <section className={styles.card}>
+                <section className={styles.card} id="withdrawal-history">
                   <h2 className={styles.cardTitle}>Withdrawal History</h2>
                   <div className={styles.miniTableWrap}>
                     <table className={styles.miniTable}>
@@ -425,6 +547,58 @@ export function ReceiverProfilePage() {
           </div>
         ) : null}
       </div>
+
+      <CallerConfirmModal
+        open={dialog === 'block'}
+        title="Block Receiver"
+        description={`Block ${profile?.name || 'this receiver'}? They will lose access.`}
+        confirmLabel="Block Receiver"
+        tone="danger"
+        busy={dialogBusy}
+        error={dialogError}
+        onClose={closeDialog}
+        onConfirm={onConfirmModeration}
+      />
+      <CallerConfirmModal
+        open={dialog === 'suspend'}
+        title="Suspend Receiver"
+        description={`Suspend ${profile?.name || 'this receiver'}? Access will be paused until activated.`}
+        confirmLabel="Suspend Receiver"
+        tone="warn"
+        busy={dialogBusy}
+        error={dialogError}
+        onClose={closeDialog}
+        onConfirm={onConfirmModeration}
+      />
+      <CallerConfirmModal
+        open={dialog === 'activate'}
+        title="Activate Receiver"
+        description={`Restore access for ${profile?.name || 'this receiver'}?`}
+        confirmLabel="Activate Receiver"
+        tone="default"
+        busy={dialogBusy}
+        error={dialogError}
+        onClose={closeDialog}
+        onConfirm={onConfirmModeration}
+      />
+      {profile ? (
+        <ReceiverEditModal
+          open={dialog === 'edit'}
+          profile={profile}
+          busy={dialogBusy}
+          error={dialogError}
+          onClose={closeDialog}
+          onSave={onSaveProfile}
+        />
+      ) : null}
+      <ReceiverAssignAgentModal
+        open={dialog === 'assign'}
+        currentAgentId={profile?.agentId}
+        busy={dialogBusy}
+        error={dialogError}
+        onClose={closeDialog}
+        onAssign={onAssignAgent}
+      />
     </DashboardShell>
   );
 }
