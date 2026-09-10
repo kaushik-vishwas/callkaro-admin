@@ -25,6 +25,9 @@ export type AdminReceiverListItem = {
   status: ReceiverStatus;
   presence: ReceiverPresence;
   topPerformer: boolean;
+  idealProfile?: boolean;
+  engagementMinutesToday?: number;
+  level?: number;
 };
 
 export type AdminReceiverStats = {

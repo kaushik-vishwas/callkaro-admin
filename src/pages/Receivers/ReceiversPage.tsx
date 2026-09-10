@@ -24,7 +24,7 @@ import {
 import {ApiError} from '../../api/client';
 import styles from './ReceiversPage.module.css';
 
-type TabFilter = 'all' | 'online' | 'offline' | 'top' | 'blocked';
+type TabFilter = 'all' | 'online' | 'offline' | 'top' | 'ideal' | 'blocked';
 
 const PAGE_SIZE = 10;
 
@@ -33,6 +33,7 @@ const tabs: Array<{id: TabFilter; label: string}> = [
   {id: 'online', label: 'Online'},
   {id: 'offline', label: 'Offline'},
   {id: 'top', label: 'Top Performers'},
+  {id: 'ideal', label: 'Predicted Ideal'},
   {id: 'blocked', label: 'Blocked'},
 ];
 
@@ -270,7 +271,9 @@ export function ReceiversPage() {
                   <th>Assigned Agent</th>
                   <th>Calls</th>
                   <th>Coins Earned</th>
-                  <th>Revenue</th>
+                  {tab === 'ideal' ? <th>Online today</th> : null}
+                  {tab === 'ideal' ? <th>Level</th> : null}
+                  {tab !== 'ideal' ? <th>Revenue</th> : null}
                   <th>Earnings</th>
                   <th>Rank</th>
                   <th>Status</th>
@@ -280,8 +283,17 @@ export function ReceiversPage() {
               <tbody>
                 {!loading && rows.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className={styles.emptyCell}>
-                      <EmptyTableState label="No receivers found." />
+                    <td
+                      colSpan={tab === 'ideal' ? 11 : 10}
+                      className={styles.emptyCell}
+                    >
+                      <EmptyTableState
+                        label={
+                          tab === 'ideal'
+                            ? 'No predicted ideal receivers right now.'
+                            : 'No receivers found.'
+                        }
+                      />
                     </td>
                   </tr>
                 ) : null}
@@ -304,7 +316,20 @@ export function ReceiversPage() {
                     </td>
                     <td>{formatNumber(receiver.calls)}</td>
                     <td>{formatNumber(receiver.coinsEarned)}</td>
-                    <td>{formatInr(receiver.revenue)}</td>
+                    {tab === 'ideal' ? (
+                      <td>
+                        {(
+                          (receiver.engagementMinutesToday || 0) / 60
+                        ).toFixed(1)}
+                        h
+                      </td>
+                    ) : null}
+                    {tab === 'ideal' ? (
+                      <td>L{receiver.level || 1}</td>
+                    ) : null}
+                    {tab !== 'ideal' ? (
+                      <td>{formatInr(receiver.revenue)}</td>
+                    ) : null}
                     <td className={styles.earnings}>
                       {formatInr(receiver.earnings)}
                     </td>
