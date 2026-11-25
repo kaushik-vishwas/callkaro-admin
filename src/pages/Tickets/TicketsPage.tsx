@@ -19,7 +19,6 @@ import {
   type TicketItem,
   type TicketStats,
   type TicketStatus,
-  type TicketUserType,
 } from '../../api/reports';
 import {
   fetchSupportTicketStats,

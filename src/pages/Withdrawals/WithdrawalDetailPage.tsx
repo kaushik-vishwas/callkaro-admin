@@ -190,7 +190,7 @@ export function WithdrawalDetailPage() {
           </div>
         </header>
 
-        {(canReject || canPay) && currentStatus !== 'successful' ? (
+        {canReject || canPay ? (
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>Admin notes</h2>
             <div className={styles.grid} style={{gridTemplateColumns: '1fr 1fr'}}>

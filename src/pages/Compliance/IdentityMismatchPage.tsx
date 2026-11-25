@@ -300,7 +300,7 @@ export function IdentityMismatchPage() {
 
           <div className={styles.pagination}>
             <p className={styles.muted}>
-              Showing {start} of {total} cases
+              Showing {start}–{end} of {total} cases
             </p>
             <div className={styles.pages}>
               <button

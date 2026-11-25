@@ -8,7 +8,6 @@ import {
   saveBankDraft,
   type BankAccount,
 } from '../../data/settings';
-import {ApiError} from '../../api/client';
 import {fetchAdminBank} from '../../api/admin';
 import {SettingsLayout} from './SettingsLayout';
 import styles from './settingsShared.module.css';
