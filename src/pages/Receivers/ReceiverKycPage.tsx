@@ -79,7 +79,10 @@ export function ReceiverKycPage() {
   }
 
   const kyc = profile?.kyc;
-  const canReview = Boolean(profile && kyc && kyc.reviewStatus === 'pending');
+  // Approve works from any non-active stage; Reject from any non-rejected stage.
+  const canApprove = Boolean(profile && profile.statusKey !== 'active');
+  const canReject = Boolean(profile && profile.statusKey !== 'rejected');
+  const canReview = canApprove || canReject;
   const backTo = fromVerification
     ? '/verification'
     : profile
@@ -133,30 +136,34 @@ export function ReceiverKycPage() {
 
           {profile && canReview ? (
             <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.btnReject}
-                disabled={busy}
-                onClick={() => setRejectOpen(true)}
-              >
-                <CircleMinus size={15} />
-                Reject
-              </button>
-              <button
-                type="button"
-                className={styles.btnApprove}
-                disabled={busy}
-                onClick={() =>
-                  void runAction(async () => {
-                    if (!profile) return;
-                    await approveReceiver(profile.id);
-                    navigate(`/receivers/${profile.id}/approved`);
-                  })
-                }
-              >
-                <CircleCheck size={15} />
-                Approve Receiver
-              </button>
+              {canReject ? (
+                <button
+                  type="button"
+                  className={styles.btnReject}
+                  disabled={busy}
+                  onClick={() => setRejectOpen(true)}
+                >
+                  <CircleMinus size={15} />
+                  Reject
+                </button>
+              ) : null}
+              {canApprove ? (
+                <button
+                  type="button"
+                  className={styles.btnApprove}
+                  disabled={busy}
+                  onClick={() =>
+                    void runAction(async () => {
+                      if (!profile) return;
+                      await approveReceiver(profile.id);
+                      navigate(`/receivers/${profile.id}/approved`);
+                    })
+                  }
+                >
+                  <CircleCheck size={15} />
+                  Approve Receiver
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>

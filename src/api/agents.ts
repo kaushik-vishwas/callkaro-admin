@@ -9,6 +9,8 @@ export type AdminAgentListItem = {
   phone: string;
   email: string;
   location: string;
+  profileLimit: number | null;
+  perMinuteCharge: number | null;
   joinedAt: string;
   lastActive: string;
   receivers: number;
@@ -64,6 +66,8 @@ export type AdminAgentProfile = AdminAgentListItem & {
     revenue: number;
     commission: number;
     status: 'active' | 'inactive' | 'blocked';
+    statusKey?: string;
+    stage?: string;
   }>;
   timeline: Array<{
     id: string;
@@ -117,10 +121,13 @@ export async function fetchAgents(params: {
 
 export async function createAgent(payload: {
   name: string;
+  location: string;
+  phone: string;
   email: string;
-  phone?: string;
+  profileLimit: number;
+  perMinuteCharge: number;
+  /** Omit to auto-generate. */
   password?: string;
-  agentCode?: string;
 }) {
   return apiRequest<{
     agent: AdminAgentListItem;
@@ -139,8 +146,13 @@ export async function updateAgent(
   id: string,
   payload: {
     name?: string;
+    location?: string;
     email?: string;
     phone?: string;
+    profileLimit?: number;
+    perMinuteCharge?: number;
+    /** Omit or leave out to keep the current password. */
+    password?: string;
     isActive?: boolean;
     avatarUrl?: string;
   },

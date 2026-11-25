@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import type {HourBucket} from '../../../api/dashboard';
 import styles from './IdealTimeChart.module.css';
 
@@ -103,6 +104,8 @@ type Props = {
   callerActivity: HourBucket[];
   receiverMaxY: number;
   callerMaxY: number;
+  actions?: ReactNode;
+  loading?: boolean;
 };
 
 export function IdealTimeChart({
@@ -110,11 +113,17 @@ export function IdealTimeChart({
   callerActivity,
   receiverMaxY,
   callerMaxY,
+  actions,
+  loading,
 }: Props) {
   return (
     <section className={styles.card}>
       <div className={styles.header}>
         <h2 className={styles.title}>Callers vs Receivers Ideal Time</h2>
+        {actions}
+      </div>
+
+      <div className={styles.legendRow}>
         <div className={styles.legend}>
           <span>
             <i className={styles.swatchCall} /> Call Time
@@ -128,7 +137,7 @@ export function IdealTimeChart({
         </div>
       </div>
 
-      <div className={styles.charts}>
+      <div className={`${styles.charts} ${loading ? styles.stale : ''}`}>
         <GroupedBars
           title="Receiver Activity"
           data={receiverActivity}

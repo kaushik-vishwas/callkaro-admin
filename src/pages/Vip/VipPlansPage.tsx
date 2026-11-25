@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
-import {CalendarDays, Plus, Search, Zap} from 'lucide-react';
+import {CalendarDays, Pencil, Plus, Search, Zap} from 'lucide-react';
+import {EditVipPlanModal} from './EditVipPlanModal';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {StatCard} from '../../components/franchise/StatCard/StatCard';
 import {VipSubnav} from '../../components/vip/VipSubnav/VipSubnav';
@@ -24,10 +25,19 @@ const EMPTY_STATS: VipPlanStats = {
 export function VipPlansPage() {
   const [query, setQuery] = useState('');
   const [showNew, setShowNew] = useState(false);
+  const [editing, setEditing] = useState<VipPlan | null>(null);
+  const [notice, setNotice] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
   const [plans, setPlans] = useState<VipPlan[]>([]);
   const [stats, setStats] = useState<VipPlanStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!notice) return;
+    const id = window.setTimeout(() => setNotice(''), 4000);
+    return () => window.clearTimeout(id);
+  }, [notice]);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,7 +61,7 @@ export function VipPlansPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -94,6 +104,11 @@ export function VipPlansPage() {
         </div>
 
         {error ? <p className={styles.subtitle}>{error}</p> : null}
+        {notice ? (
+          <p className={styles.subtitle} role="status">
+            {notice}
+          </p>
+        ) : null}
 
         <section className={styles.statGrid}>
           <StatCard
@@ -125,18 +140,19 @@ export function VipPlansPage() {
                   <th>Duration</th>
                   <th>Price</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className={styles.empty}>
+                    <td colSpan={5} className={styles.empty}>
                       <EmptyTableState label="Loading plans..." />
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className={styles.empty}>
+                    <td colSpan={5} className={styles.empty}>
                       No plans match your search.
                     </td>
                   </tr>
@@ -181,6 +197,16 @@ export function VipPlansPage() {
                           {plan.status === 'active' ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                       </td>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.editBtn}
+                          onClick={() => setEditing(plan)}
+                        >
+                          <Pencil size={13} />
+                          Edit
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -191,6 +217,18 @@ export function VipPlansPage() {
             Showing 1-{filtered.length} of {filtered.length} plans
           </p>
         </section>
+
+        {editing ? (
+          <EditVipPlanModal
+            plan={editing}
+            onClose={() => setEditing(null)}
+            onSaved={name => {
+              setEditing(null);
+              setNotice(`${name} updated.`);
+              setReloadKey(key => key + 1);
+            }}
+          />
+        ) : null}
 
         {showNew ? (
           <div className={styles.modalBackdrop} role="presentation">

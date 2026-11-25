@@ -480,7 +480,12 @@ export function TicketsPage() {
                     supportTickets.map(ticket => (
                       <tr key={ticket.id}>
                         <td className={styles.code}>{ticket.code}</td>
-                        <td>{ticket.userName}</td>
+                        <td>
+                          {ticket.userName}
+                          {ticket.priority ? (
+                            <span className={styles.priorityBadge}>VIP · Priority</span>
+                          ) : null}
+                        </td>
                         <td>{ticket.category}</td>
                         <td>{ticket.subject}</td>
                         <td>

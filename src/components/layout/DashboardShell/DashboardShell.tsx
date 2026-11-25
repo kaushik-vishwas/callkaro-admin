@@ -4,7 +4,13 @@ import {Sidebar} from '../Sidebar/Sidebar';
 import {Topbar} from '../Topbar/Topbar';
 import styles from './DashboardShell.module.css';
 
-export function DashboardShell({children}: {children: ReactNode}) {
+export function DashboardShell({
+  children,
+  showSearch = true,
+}: {
+  children: ReactNode;
+  showSearch?: boolean;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
@@ -33,7 +39,10 @@ export function DashboardShell({children}: {children: ReactNode}) {
       ) : null}
 
       <div className={styles.main}>
-        <Topbar onMenuClick={() => setMobileOpen(true)} />
+        <Topbar
+          onMenuClick={() => setMobileOpen(true)}
+          showSearch={showSearch}
+        />
         <div className={styles.content}>{children}</div>
       </div>
     </div>

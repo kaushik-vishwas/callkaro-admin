@@ -4,8 +4,27 @@ export type VipPeriod = 'weekly' | 'monthly' | 'yearly';
 export type VipPlanStatus = 'active' | 'inactive';
 export type VipUserStatus = 'active' | 'blocked' | 'suspended';
 
+/** Subscriber benefits a plan can grant. Checked = granted to that plan's callers. */
+export type VipBenefitKey =
+  | 'videoDiscount'
+  | 'rechargeBonus'
+  | 'freeChat'
+  | 'crownProfile'
+  | 'prioritySupport';
+
+export type VipBenefits = Record<VipBenefitKey, boolean>;
+
+export const VIP_BENEFIT_LABELS: Record<VipBenefitKey, string> = {
+  videoDiscount: 'Video call coin discount',
+  rechargeBonus: 'Recharge bonus on every recharge',
+  freeChat: 'Free chat',
+  crownProfile: 'Crown profile',
+  prioritySupport: 'Priority support response',
+};
+
 export type VipPlan = {
   id: string;
+  benefits?: VipBenefits;
   name: string;
   durationDays: number;
   durationLabel: string;
@@ -14,6 +33,10 @@ export type VipPlan = {
   bonusCoins?: number;
   perDayLabel?: string;
   saveBadge?: string | null;
+  /** % off the per-minute coin rate while this plan is active. */
+  coinDiscountPercent?: number;
+  /** % of recharged coins added as a bonus on every recharge while subscribed. */
+  rechargeBonusPercent?: number;
   status: VipPlanStatus;
   popular?: boolean;
   icon: 'bolt' | 'calendar';
@@ -151,4 +174,25 @@ export async function fetchVipUsers(params: {
 
 export async function fetchVipUser(id: string) {
   return apiRequest<{user: VipUser}>(`/admin/vip/users/${encodeURIComponent(id)}`);
+}
+
+export type VipPlanUpdate = {
+  title?: string;
+  priceInr?: number;
+  originalInr?: number;
+  days?: number;
+  bonusCoins?: number;
+  perDayLabel?: string;
+  saveBadge?: string;
+  coinDiscountPercent?: number;
+  rechargeBonusPercent?: number;
+  benefits?: Partial<VipBenefits>;
+  status?: 'active' | 'inactive';
+};
+
+export function updateVipPlan(id: string, payload: VipPlanUpdate) {
+  return apiRequest<{plan: unknown}>(`/admin/vip/plans/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }

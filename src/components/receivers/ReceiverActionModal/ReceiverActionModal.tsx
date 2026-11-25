@@ -3,7 +3,7 @@ import {X} from 'lucide-react';
 import {fetchAgents, type AdminAgentListItem} from '../../../api/agents';
 import {ApiError} from '../../../api/client';
 import type {AdminReceiverProfile} from '../../../api/receivers';
-import styles from '../../callers/CallerActionModal/CallerActionModal.module.css';
+import styles from './ReceiverActionModal.module.css';
 
 type EditProps = {
   open: boolean;
@@ -71,7 +71,6 @@ export function ReceiverEditModal({
         role="dialog"
         aria-modal="true"
         onClick={event => event.stopPropagation()}
-        style={{width: 'min(100%, 520px)'}}
       >
         <div className={styles.head}>
           <div>
@@ -97,61 +96,51 @@ export function ReceiverEditModal({
               required
             />
           </label>
-          <label>
-            Login email
-            <input
-              type="email"
-              value={email}
-              onChange={event => setEmail(event.target.value)}
-            />
-          </label>
-          <label>
-            Age
-            <input
-              type="number"
-              min={18}
-              max={80}
-              value={age}
-              onChange={event => setAge(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Gender
-            <select
-              value={gender}
-              onChange={event => setGender(event.target.value)}
-              style={{
-                height: 42,
-                border: '1px solid var(--color-border)',
-                borderRadius: 10,
-                padding: '0 12px',
-                fontSize: 14,
-              }}
-            >
-              <option value="female">Female</option>
-              <option value="male">Male</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label>
-            Level
-            <select
-              value={level}
-              onChange={event => setLevel(event.target.value)}
-              style={{
-                height: 42,
-                border: '1px solid var(--color-border)',
-                borderRadius: 10,
-                padding: '0 12px',
-                fontSize: 14,
-              }}
-            >
-              <option value="1">Level 1</option>
-              <option value="2">Level 2</option>
-              <option value="3">Level 3</option>
-            </select>
-          </label>
+          <div className={styles.row}>
+            <label>
+              Login email
+              <input
+                type="email"
+                value={email}
+                onChange={event => setEmail(event.target.value)}
+              />
+            </label>
+            <label>
+              Level
+              <select
+                value={level}
+                onChange={event => setLevel(event.target.value)}
+              >
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+                <option value="3">Level 3</option>
+              </select>
+            </label>
+          </div>
+          <div className={styles.row}>
+            <label>
+              Gender
+              <select
+                value={gender}
+                onChange={event => setGender(event.target.value)}
+              >
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label>
+              Age
+              <input
+                type="number"
+                min={18}
+                max={80}
+                value={age}
+                onChange={event => setAge(event.target.value)}
+                required
+              />
+            </label>
+          </div>
           <label>
             Languages (comma separated)
             <input

@@ -5,7 +5,6 @@ import {
   Calendar,
   Clock,
   Download,
-  KeyRound,
   Mail,
   MapPin,
   PauseCircle,
@@ -16,21 +15,18 @@ import {
 } from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
+import {CallerConfirmModal} from '../../components/callers/CallerActionModal/CallerActionModal';
+import {AgentCommissionLedgerModal} from '../../components/agents/AgentActionModal/AgentActionModal';
 import {
-  CallerConfirmModal,
-  CallerResetPasswordModal,
-} from '../../components/callers/CallerActionModal/CallerActionModal';
-import {
-  AgentCommissionLedgerModal,
-  AgentEditModal,
-} from '../../components/agents/AgentActionModal/AgentActionModal';
+  EditAgentModal,
+  type EditAgentPayload,
+} from '../../components/agents/EditAgentModal/EditAgentModal';
 import {AgentStatusBadge} from '../../components/agents/AgentStatusBadge/AgentStatusBadge';
 import {ReceiverStatusBadge} from '../../components/receivers/ReceiverStatusBadge/ReceiverStatusBadge';
 import {
   fetchAgent,
   formatInr,
   formatNumber,
-  resetAgentPassword,
   updateAgent,
   type AdminAgentProfile,
 } from '../../api/agents';
@@ -98,8 +94,6 @@ export function AgentProfilePage() {
   const [actionError, setActionError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
-  const [resetPassword, setResetPassword] = useState('');
   const [ledgerOpen, setLedgerOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -130,11 +124,7 @@ export function AgentProfilePage() {
     return <Navigate to="/agents" replace />;
   }
 
-  async function onSaveEdit(payload: {
-    name: string;
-    email: string;
-    phone: string;
-  }) {
+  async function onSaveEdit(payload: EditAgentPayload) {
     if (!profile) return;
     setActionBusy(true);
     setActionError('');
@@ -170,23 +160,6 @@ export function AgentProfilePage() {
     } catch (err) {
       setActionError(
         err instanceof ApiError ? err.message : 'Failed to update agent.',
-      );
-    } finally {
-      setActionBusy(false);
-    }
-  }
-
-  async function onConfirmReset(password: string) {
-    if (!profile) return;
-    setActionBusy(true);
-    setActionError('');
-    try {
-      const result = await resetAgentPassword(profile.id, password);
-      setResetPassword(result.temporaryPassword);
-      setActionMessage('Password reset successfully.');
-    } catch (err) {
-      setActionError(
-        err instanceof ApiError ? err.message : 'Failed to reset password.',
       );
     } finally {
       setActionBusy(false);
@@ -384,18 +357,6 @@ export function AgentProfilePage() {
                     <button
                       type="button"
                       className={styles.action}
-                      onClick={() => {
-                        setActionError('');
-                        setResetPassword('');
-                        setResetOpen(true);
-                      }}
-                    >
-                      <KeyRound size={15} />
-                      Reset Password
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.action}
                       onClick={() => setLedgerOpen(true)}
                     >
                       <ScrollText size={15} />
@@ -535,7 +496,7 @@ export function AgentProfilePage() {
                             <td>{formatInr(row.revenue)}</td>
                             <td>{formatInr(row.commission)}</td>
                             <td>
-                              <ReceiverStatusBadge status={row.status} />
+                              <ReceiverStatusBadge status={row.status} stage={row.stage} />
                             </td>
                           </tr>
                         ))}
@@ -571,7 +532,7 @@ export function AgentProfilePage() {
 
       {profile ? (
         <>
-          <AgentEditModal
+          <EditAgentModal
             open={editOpen}
             agent={profile}
             busy={actionBusy}
@@ -593,18 +554,6 @@ export function AgentProfilePage() {
             error={actionError}
             onClose={() => setSuspendOpen(false)}
             onConfirm={reason => void onConfirmSuspend(reason)}
-          />
-          <CallerResetPasswordModal
-            open={resetOpen}
-            callerName={profile.name}
-            busy={actionBusy}
-            error={actionError}
-            resultPassword={resetPassword}
-            onClose={() => {
-              setResetOpen(false);
-              setResetPassword('');
-            }}
-            onConfirm={password => void onConfirmReset(password)}
           />
           <AgentCommissionLedgerModal
             open={ledgerOpen}

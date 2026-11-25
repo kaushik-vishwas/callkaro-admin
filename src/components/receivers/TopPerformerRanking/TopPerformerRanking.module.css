@@ -1,0 +1,141 @@
+.heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.podiumCard,
+.tipsCard {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  padding: 18px 16px;
+}
+
+.podiumRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.slot {
+  flex: 1;
+  max-width: 180px;
+  display: grid;
+  justify-items: center;
+  align-content: end;
+}
+
+.crown {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.avatarRing {
+  border: 3px solid;
+  border-radius: 999px;
+  padding: 2px;
+  display: inline-grid;
+}
+
+.emptyAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+.name {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.points {
+  margin: 2px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.pedestal {
+  width: 100%;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tipsHeader {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.tipsSub {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+.tipsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tip:last-child {
+  border-bottom: 0;
+}
+
+.tipIndex {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  font-size: 12px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.tipTitle {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.tipDesc {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}

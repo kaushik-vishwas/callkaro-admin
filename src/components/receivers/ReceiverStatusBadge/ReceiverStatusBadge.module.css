@@ -13,17 +13,29 @@
   white-space: nowrap;
 }
 
+.draft {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .active {
   background: #d1fae5;
   color: #047857;
 }
 
-.inactive {
+/* Suspended, terminated or blocked by an admin — one look */
+.suspended,
+.blocked {
   background: #ff2d78;
   color: #fff;
 }
 
-.blocked {
-  background: #7f1d1d;
-  color: #fff;
+.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
 }

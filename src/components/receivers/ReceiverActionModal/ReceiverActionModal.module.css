@@ -1,0 +1,178 @@
+/* Receiver edit / assign dialogs. Scrolls inside the screen so the header
+   and Save/Cancel buttons are always reachable, even on short screens. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(17, 24, 39, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal {
+  width: min(100%, 520px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.2);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.close {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+/* Two fields side by side; stacks on phones. */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.row label {
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form input,
+.form select,
+.form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  background: #fff;
+}
+
+.form input,
+.form select {
+  height: 42px;
+}
+
+.form textarea {
+  padding: 10px 12px;
+  line-height: 1.5;
+  min-height: 84px;
+  resize: vertical;
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+  outline: none;
+  border-color: var(--color-brand-ring, #f9a8c4);
+  box-shadow: 0 0 0 3px rgba(255, 45, 120, 0.12);
+}
+
+.form input:disabled,
+.form select:disabled {
+  background: #f9fafb;
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.primary,
+.ghost {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  border: 0;
+  background: #111827;
+  color: #fff;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ghost {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 16px;
+  }
+}

@@ -4,9 +4,11 @@ import styles from './Topbar.module.css';
 
 type TopbarProps = {
   onMenuClick?: () => void;
+  /** Pages can hide the global search (default: shown). */
+  showSearch?: boolean;
 };
 
-export function Topbar({onMenuClick}: TopbarProps) {
+export function Topbar({onMenuClick, showSearch = true}: TopbarProps) {
   const {admin, logout} = useAuth();
   const initial = (admin?.name || 'A').charAt(0).toUpperCase();
 
@@ -21,6 +23,7 @@ export function Topbar({onMenuClick}: TopbarProps) {
         ☰
       </button>
 
+      {showSearch ? (
       <label className={styles.search}>
         <Search size={16} strokeWidth={2} className={styles.searchIcon} />
         <input
@@ -29,6 +32,7 @@ export function Topbar({onMenuClick}: TopbarProps) {
           aria-label="Search"
         />
       </label>
+      ) : null}
 
       <div className={styles.actions}>
         <button type="button" className={styles.iconBtn} aria-label="Notifications">

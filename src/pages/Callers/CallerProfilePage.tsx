@@ -2,7 +2,6 @@ import {useCallback, useEffect, useState} from 'react';
 import {Link, Navigate, useNavigate, useParams} from 'react-router-dom';
 import {
   ArrowLeft,
-  Ban,
   Download,
   KeyRound,
   PauseCircle,
@@ -85,7 +84,7 @@ function CallActivityChart({
   );
 }
 
-type DialogKind = 'block' | 'suspend' | 'activate' | 'reset' | null;
+type DialogKind = 'suspend' | 'activate' | 'reset' | null;
 
 export function CallerProfilePage() {
   const {callerId = ''} = useParams();
@@ -138,7 +137,7 @@ export function CallerProfilePage() {
   }
 
   async function onConfirmModeration(reason: string) {
-    if (!profile || (dialog !== 'block' && dialog !== 'suspend' && dialog !== 'activate')) {
+    if (!profile || (dialog !== 'suspend' && dialog !== 'activate')) {
       return;
     }
     setDialogBusy(true);
@@ -147,11 +146,7 @@ export function CallerProfilePage() {
       const result = await updateCallerStatus(profile.id, dialog, reason);
       setProfile(result.caller);
       setActionMessage(
-        dialog === 'block'
-          ? 'Caller blocked.'
-          : dialog === 'suspend'
-            ? 'Caller suspended.'
-            : 'Caller activated.',
+        dialog === 'suspend' ? 'Caller suspended.' : 'Caller activated.',
       );
       setDialog(null);
     } catch (err) {
@@ -335,17 +330,6 @@ export function CallerProfilePage() {
                     </button>
                   ) : (
                     <>
-                      <button
-                        type="button"
-                        className={styles.actionDanger}
-                        onClick={() => {
-                          setDialogError('');
-                          setDialog('block');
-                        }}
-                      >
-                        <Ban size={15} />
-                        Block Caller
-                      </button>
                       <button
                         type="button"
                         className={styles.actionWarn}
@@ -565,17 +549,6 @@ export function CallerProfilePage() {
         ) : null}
       </div>
 
-      <CallerConfirmModal
-        open={dialog === 'block'}
-        title="Block Caller"
-        description={`Block ${profile?.name || 'this caller'}? They will not be able to log in.`}
-        confirmLabel="Block Caller"
-        tone="danger"
-        busy={dialogBusy}
-        error={dialogError}
-        onClose={closeDialog}
-        onConfirm={onConfirmModeration}
-      />
       <CallerConfirmModal
         open={dialog === 'suspend'}
         title="Suspend Caller"

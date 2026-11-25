@@ -1,16 +1,26 @@
 import {useCallback, useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
-import {ChevronLeft, ChevronRight, Search} from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  Eye,
+  PauseCircle,
+  Search,
+  TriangleAlert,
+} from 'lucide-react';
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
 import {StatusBadge} from '../../components/callers/StatusBadge/StatusBadge';
 import {VipBadge} from '../../components/callers/VipBadge/VipBadge';
 import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
+import {WarnModal} from '../../components/shared/WarnModal/WarnModal';
 import {
   fetchCallerStats,
   fetchCallers,
   formatInr,
   formatNumber,
+  updateCallerStatus,
   type AdminCallerListItem,
   type AdminCallerStats,
   type CallerStatus,
@@ -25,8 +35,7 @@ const PAGE_SIZE = 15;
 const tabs: Array<{id: TabFilter; label: string}> = [
   {id: 'all', label: 'All Users'},
   {id: 'vip', label: 'VIP Only'},
-  {id: 'active', label: 'Active'},
-  {id: 'blocked', label: 'Blocked'},
+  {id: 'active', label: 'Enabled'},
   {id: 'suspended', label: 'Suspended'},
 ];
 
@@ -44,6 +53,17 @@ export function CallersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [warnTarget, setWarnTarget] = useState<AdminCallerListItem | null>(
+    null,
+  );
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!notice) return;
+    const id = window.setTimeout(() => setNotice(''), 4000);
+    return () => window.clearTimeout(id);
+  }, [notice]);
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
@@ -89,6 +109,32 @@ export function CallersPage() {
     const clamped = Math.min(totalPages, Math.max(1, next));
     setPage(clamped);
     setJump(String(clamped));
+  }
+
+  async function runAction(
+    caller: AdminCallerListItem,
+    action: 'suspend' | 'activate',
+  ) {
+    const question =
+      action === 'suspend'
+        ? `Suspend ${caller.name}? Access will be paused until activated again.`
+        : `Activate ${caller.name}? They will be able to log in again.`;
+    if (!window.confirm(question)) return;
+    setBusyId(caller.id);
+    setError('');
+    try {
+      await updateCallerStatus(caller.id, action);
+      setNotice(
+        `${caller.name} has been ${action === 'suspend' ? 'suspended' : 'activated'}.`,
+      );
+      await load();
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : `Failed to ${action} caller.`,
+      );
+    } finally {
+      setBusyId(null);
+    }
   }
 
   const statCards = [
@@ -233,6 +279,11 @@ export function CallersPage() {
           </div>
 
           {error ? <p className={styles.errorBanner}>{error}</p> : null}
+          {notice ? (
+            <p className={styles.noticeBanner} role="status">
+              {notice}
+            </p>
+          ) : null}
           {loading ? <p className={styles.loading}>Loading callers…</p> : null}
 
           <div className={styles.tableWrap}>
@@ -249,12 +300,13 @@ export function CallersPage() {
                   <th>VIP</th>
                   <th>Status</th>
                   <th>Last Active</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {!loading && rows.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className={styles.emptyCell}>
+                    <td colSpan={11} className={styles.emptyCell}>
                       <EmptyTableState label="No callers found." />
                     </td>
                   </tr>
@@ -283,6 +335,55 @@ export function CallersPage() {
                       <StatusBadge status={caller.status} />
                     </td>
                     <td>{caller.lastActive}</td>
+                    <td>
+                      <div className={styles.actions}>
+                        <Link
+                          to={`/callers/${caller.id}`}
+                          className={styles.iconBtn}
+                          title="View"
+                          aria-label={`View ${caller.name}`}
+                        >
+                          <Eye size={15} />
+                        </Link>
+                        <button
+                          type="button"
+                          className={styles.iconBtnWarn}
+                          title="Warn"
+                          aria-label={`Warn ${caller.name}`}
+                          onClick={() => {
+                            setError('');
+                            setWarnTarget(caller);
+                          }}
+                          disabled={busyId === caller.id}
+                        >
+                          <TriangleAlert size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.iconBtnSuccess}
+                          title={
+                            caller.status === 'active'
+                              ? 'Only suspended callers can be activated'
+                              : 'Activate'
+                          }
+                          aria-label={`Activate ${caller.name}`}
+                          onClick={() => void runAction(caller, 'activate')}
+                          disabled={caller.status === 'active' || busyId === caller.id}
+                        >
+                          <CircleCheck size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.iconBtnDanger}
+                          title="Suspend"
+                          aria-label={`Suspend ${caller.name}`}
+                          onClick={() => void runAction(caller, 'suspend')}
+                          disabled={caller.status !== 'active' || busyId === caller.id}
+                        >
+                          <PauseCircle size={15} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -358,6 +459,16 @@ export function CallersPage() {
           </div>
         </section>
       </div>
+      <WarnModal
+        target={warnTarget}
+        appLabel="caller's app"
+        send={(id, message) => updateCallerStatus(id, 'warn', message)}
+        onClose={() => setWarnTarget(null)}
+        onSent={name => {
+          setWarnTarget(null);
+          setNotice(`Warning sent to ${name}.`);
+        }}
+      />
     </DashboardShell>
   );
 }

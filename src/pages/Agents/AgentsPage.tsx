@@ -13,7 +13,10 @@ import {
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
 import {CallerConfirmModal} from '../../components/callers/CallerActionModal/CallerActionModal';
-import {AgentEditModal} from '../../components/agents/AgentActionModal/AgentActionModal';
+import {
+  EditAgentModal,
+  type EditAgentPayload,
+} from '../../components/agents/EditAgentModal/EditAgentModal';
 import {AgentStatusBadge} from '../../components/agents/AgentStatusBadge/AgentStatusBadge';
 import {CreateAgentModal} from '../../components/agents/CreateAgentModal/CreateAgentModal';
 import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
@@ -113,11 +116,7 @@ export function AgentsPage() {
     setJump(String(clamped));
   }
 
-  async function onSaveEdit(payload: {
-    name: string;
-    email: string;
-    phone: string;
-  }) {
+  async function onSaveEdit(payload: EditAgentPayload) {
     if (!editAgent) return;
     setActionBusy(true);
     setActionError('');
@@ -526,7 +525,7 @@ export function AgentsPage() {
       />
 
       {editAgent ? (
-        <AgentEditModal
+        <EditAgentModal
           open
           agent={editAgent}
           busy={actionBusy}

@@ -14,9 +14,6 @@ import {AgentsPage} from './pages/Agents/AgentsPage';
 import {AgentProfilePage} from './pages/Agents/AgentProfilePage';
 import {VerificationPage} from './pages/Verification/VerificationPage';
 import {ApprovalSuccessPage} from './pages/Verification/ApprovalSuccessPage';
-import {FranchisesPage} from './pages/Franchise/FranchisesPage';
-import {CreateFranchisePage} from './pages/Franchise/CreateFranchisePage';
-import {FranchiseDetailPage} from './pages/Franchise/FranchiseDetailPage';
 import {TicketsPage} from './pages/Tickets/TicketsPage';
 import {TransactionsPage} from './pages/Transactions/TransactionsPage';
 import {TransactionDetailPage} from './pages/Transactions/TransactionDetailPage';
@@ -27,6 +24,10 @@ import {VipPlansPage} from './pages/Vip/VipPlansPage';
 import {VipUsersPage} from './pages/Vip/VipUsersPage';
 import {VipUserDetailPage} from './pages/Vip/VipUserDetailPage';
 import {AnalyticsRoute} from './pages/Analytics/AnalyticsRoute';
+import {RechargePackagesPage} from './pages/RechargePackages/RechargePackagesPage';
+import {CallRatesPage} from './pages/CallRates/CallRatesPage';
+import {SubscriptionsPage} from './pages/Subscriptions/SubscriptionsPage';
+import {AnnouncementsPage} from './pages/Announcements/AnnouncementsPage';
 import {IdentityMismatchPage} from './pages/Compliance/IdentityMismatchPage';
 import {DetectedProfilesPage} from './pages/Compliance/DetectedProfilesPage';
 import {ComplianceCaseDetailPage} from './pages/Compliance/ComplianceCaseDetailPage';
@@ -105,6 +106,14 @@ export default function App() {
             }
           />
           <Route
+            path="/receivers/top-performers"
+            element={
+              <ProtectedRoute>
+                <ReceiversPage view="top" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/receivers/:receiverId"
             element={
               <ProtectedRoute>
@@ -141,30 +150,6 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <AgentProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/franchise"
-            element={
-              <ProtectedRoute>
-                <FranchisesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/franchise/create"
-            element={
-              <ProtectedRoute>
-                <CreateFranchisePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/franchise/:franchiseId"
-            element={
-              <ProtectedRoute>
-                <FranchiseDetailPage />
               </ProtectedRoute>
             }
           />
@@ -261,6 +246,38 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <VipUserDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recharge-packages"
+            element={
+              <ProtectedRoute>
+                <RechargePackagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/call-rates"
+            element={
+              <ProtectedRoute>
+                <CallRatesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscriptions"
+            element={
+              <ProtectedRoute>
+                <SubscriptionsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/announcements"
+            element={
+              <ProtectedRoute>
+                <AnnouncementsPage />
               </ProtectedRoute>
             }
           />

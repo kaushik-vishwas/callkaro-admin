@@ -17,6 +17,8 @@ export type SupportTicketItem = {
   role: SupportTicketRole;
   userId: string;
   userName: string;
+  /** Raised by an active VIP subscriber; shown first. */
+  priority?: boolean;
   userEmail: string;
   userPhone: string;
   category: string;

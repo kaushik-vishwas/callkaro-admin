@@ -2,7 +2,6 @@ import {useCallback, useEffect, useState} from 'react';
 import {Link, Navigate, useNavigate, useParams} from 'react-router-dom';
 import {
   ArrowLeft,
-  Ban,
   FileText,
   Languages,
   Mail,
@@ -87,7 +86,7 @@ function formatOnlineHours(value: number) {
   return `${Number(value || 0).toFixed(2)}h`;
 }
 
-type DialogKind = 'block' | 'suspend' | 'activate' | 'edit' | 'assign' | null;
+type DialogKind = 'suspend' | 'activate' | 'edit' | 'assign' | null;
 
 export function ReceiverProfilePage() {
   const {receiverId = ''} = useParams();
@@ -138,7 +137,7 @@ export function ReceiverProfilePage() {
   async function onConfirmModeration(reason: string) {
     if (
       !profile ||
-      (dialog !== 'block' && dialog !== 'suspend' && dialog !== 'activate')
+      (dialog !== 'suspend' && dialog !== 'activate')
     ) {
       return;
     }
@@ -148,11 +147,7 @@ export function ReceiverProfilePage() {
       const result = await updateReceiverStatus(profile.id, dialog, reason);
       setProfile(result.receiver);
       setActionMessage(
-        dialog === 'block'
-          ? 'Receiver blocked.'
-          : dialog === 'suspend'
-            ? 'Receiver suspended.'
-            : 'Receiver activated.',
+        dialog === 'suspend' ? 'Receiver suspended.' : 'Receiver activated.',
       );
       setDialog(null);
     } catch (err) {
@@ -216,7 +211,10 @@ export function ReceiverProfilePage() {
   }
 
   const needsActivate =
-    profile?.status === 'blocked' || profile?.status === 'inactive';
+    profile?.status === 'blocked' ||
+    profile?.status === 'inactive' ||
+    profile?.stage === 'rejected' ||
+    profile?.stage === 'pending';
 
   return (
     <DashboardShell>
@@ -255,7 +253,7 @@ export function ReceiverProfilePage() {
                   <div>
                     <h1 className={styles.name}>{profile.name}</h1>
                     <p className={styles.code}>{profile.code}</p>
-                    <ReceiverStatusBadge status={profile.status} />
+                    <ReceiverStatusBadge status={profile.status} stage={profile.stage} />
                   </div>
                 </div>
                 <ul className={styles.metaList}>
@@ -352,18 +350,6 @@ export function ReceiverProfilePage() {
                       Suspend Receiver
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className={styles.actionDanger}
-                    onClick={() => {
-                      setDialogError('');
-                      setDialog('block');
-                    }}
-                    disabled={profile.status === 'blocked'}
-                  >
-                    <Ban size={15} />
-                    Block Receiver
-                  </button>
                   <button
                     type="button"
                     className={styles.action}
@@ -548,17 +534,6 @@ export function ReceiverProfilePage() {
         ) : null}
       </div>
 
-      <CallerConfirmModal
-        open={dialog === 'block'}
-        title="Block Receiver"
-        description={`Block ${profile?.name || 'this receiver'}? They will lose access.`}
-        confirmLabel="Block Receiver"
-        tone="danger"
-        busy={dialogBusy}
-        error={dialogError}
-        onClose={closeDialog}
-        onConfirm={onConfirmModeration}
-      />
       <CallerConfirmModal
         open={dialog === 'suspend'}
         title="Suspend Receiver"

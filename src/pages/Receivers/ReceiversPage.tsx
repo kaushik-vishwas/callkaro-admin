@@ -1,9 +1,10 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import {
-  Ban,
+  PauseCircle,
   ChevronLeft,
   ChevronRight,
+  CircleCheck,
   Eye,
   Search,
   TriangleAlert,
@@ -11,7 +12,12 @@ import {
 import {DashboardShell} from '../../components/layout/DashboardShell/DashboardShell';
 import {CallerAvatar} from '../../components/callers/CallerAvatar/CallerAvatar';
 import {ReceiverStatusBadge} from '../../components/receivers/ReceiverStatusBadge/ReceiverStatusBadge';
+import {
+  RankInstructions,
+  TopPerformerPodium,
+} from '../../components/receivers/TopPerformerRanking/TopPerformerRanking';
 import {EmptyTableState} from '../../components/shared/EmptyTableState/EmptyTableState';
+import {WarnModal} from '../../components/shared/WarnModal/WarnModal';
 import {
   fetchReceiverStats,
   fetchReceivers,
@@ -24,23 +30,36 @@ import {
 import {ApiError} from '../../api/client';
 import styles from './ReceiversPage.module.css';
 
-type TabFilter = 'all' | 'online' | 'offline' | 'top' | 'ideal' | 'blocked';
+type TabFilter = 'all' | 'online' | 'offline' | 'top' | 'ideal' | 'suspended';
 
 const PAGE_SIZE = 10;
+
+/** Activate works for every stage except Draft (profile not yet submitted)
+ *  and Verified (already active). */
+function canActivate(receiver: AdminReceiverListItem) {
+  if (receiver.stage) {
+    return ['suspended', 'blocked', 'rejected', 'pending'].includes(
+      receiver.stage,
+    );
+  }
+  return receiver.status !== 'active';
+}
 
 const tabs: Array<{id: TabFilter; label: string}> = [
   {id: 'all', label: 'All'},
   {id: 'online', label: 'Online'},
   {id: 'offline', label: 'Offline'},
-  {id: 'top', label: 'Top Performers'},
   {id: 'ideal', label: 'Predicted Ideal'},
-  {id: 'blocked', label: 'Blocked'},
+  {id: 'suspended', label: 'Suspended'},
 ];
 
-export function ReceiversPage() {
+export function ReceiversPage({view = 'all'}: {view?: 'all' | 'top'}) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [tab, setTab] = useState<TabFilter>('all');
+  const [tabFilter, setTabFilter] = useState<TabFilter>('all');
+  // The Top Performers view is its own route; it overrides the in-page filter.
+  const tab: TabFilter = view === 'top' ? 'top' : tabFilter;
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
@@ -51,6 +70,34 @@ export function ReceiversPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [warnTarget, setWarnTarget] = useState<AdminReceiverListItem | null>(
+    null,
+  );
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [topThree, setTopThree] = useState<AdminReceiverListItem[]>([]);
+
+  // Podium (top 3) is only shown on the Top Performers view.
+  useEffect(() => {
+    if (view !== 'top') return;
+    let cancelled = false;
+    fetchReceivers({tab: 'top', page: 1, limit: 3})
+      .then(result => {
+        if (!cancelled) setTopThree(result.receivers);
+      })
+      .catch(() => {
+        if (!cancelled) setTopThree([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [view]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const id = window.setTimeout(() => setNotice(''), 4000);
+    return () => window.clearTimeout(id);
+  }, [notice]);
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
@@ -98,15 +145,43 @@ export function ReceiversPage() {
     setJump(String(clamped));
   }
 
-  async function onBlock(receiver: AdminReceiverListItem) {
-    if (!window.confirm(`Block ${receiver.name}?`)) return;
+  async function onSuspend(receiver: AdminReceiverListItem) {
+    if (
+      !window.confirm(
+        `Suspend ${receiver.name}? Access will be paused until activated again.`,
+      )
+    ) {
+      return;
+    }
+    setBusyId(receiver.id);
     try {
-      await updateReceiverStatus(receiver.id, 'block');
+      await updateReceiverStatus(receiver.id, 'suspend');
+      setNotice(`${receiver.name} has been suspended.`);
       await load();
     } catch (err) {
       setError(
         err instanceof ApiError ? err.message : 'Failed to block receiver.',
       );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function onActivate(receiver: AdminReceiverListItem) {
+    if (!window.confirm(`Activate ${receiver.name}? They will be able to go online again.`)) {
+      return;
+    }
+    setBusyId(receiver.id);
+    try {
+      await updateReceiverStatus(receiver.id, 'activate');
+      setNotice(`${receiver.name} has been activated.`);
+      await load();
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Failed to activate receiver.',
+      );
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -130,9 +205,9 @@ export function ReceiversPage() {
       tone: 'dark',
     },
     {
-      id: 'blocked',
-      label: 'Blocked',
-      value: formatNumber(stats?.blocked || 0),
+      id: 'suspended',
+      label: 'Suspended',
+      value: formatNumber(stats?.suspended || 0),
       tone: 'red',
     },
     {
@@ -195,6 +270,13 @@ export function ReceiversPage() {
           ))}
         </div>
 
+        {view === 'top' ? (
+          <div className={styles.rankGrid}>
+            <TopPerformerPodium top={topThree} />
+            <RankInstructions currentRank={topThree[0]?.rank ?? null} />
+          </div>
+        ) : null}
+
         <section className={styles.panel}>
           <div className={styles.filters}>
             <label className={styles.search}>
@@ -244,8 +326,9 @@ export function ReceiversPage() {
                     tab === item.id ? styles.tabActive : '',
                   ].join(' ')}
                   onClick={() => {
-                    setTab(item.id);
+                    setTabFilter(item.id);
                     setPage(1);
+                    if (view === 'top') navigate('/receivers');
                   }}
                 >
                   {item.label}
@@ -258,6 +341,11 @@ export function ReceiversPage() {
           </div>
 
           {error ? <p className={styles.errorBanner}>{error}</p> : null}
+          {notice ? (
+            <p className={styles.noticeBanner} role="status">
+              {notice}
+            </p>
+          ) : null}
           {loading ? (
             <p className={styles.loading}>Loading receivers…</p>
           ) : null}
@@ -335,7 +423,7 @@ export function ReceiversPage() {
                     </td>
                     <td className={styles.rank}>#{receiver.rank}</td>
                     <td>
-                      <ReceiverStatusBadge status={receiver.status} />
+                      <ReceiverStatusBadge status={receiver.status} stage={receiver.stage} />
                     </td>
                     <td>
                       <div className={styles.actions}>
@@ -352,18 +440,45 @@ export function ReceiversPage() {
                           className={styles.iconBtnWarn}
                           title="Warn"
                           aria-label={`Warn ${receiver.name}`}
+                          onClick={() => {
+                            setError('');
+                            setWarnTarget(receiver);
+                          }}
+                          disabled={busyId === receiver.id}
                         >
                           <TriangleAlert size={15} />
                         </button>
                         <button
                           type="button"
-                          className={styles.iconBtnDanger}
-                          title="Block"
-                          aria-label={`Block ${receiver.name}`}
-                          onClick={() => void onBlock(receiver)}
-                          disabled={receiver.status === 'blocked'}
+                          className={styles.iconBtnSuccess}
+                          title={
+                            canActivate(receiver)
+                              ? 'Activate'
+                              : 'Draft profiles can’t be activated yet'
+                          }
+                          aria-label={`Activate ${receiver.name}`}
+                          onClick={() => void onActivate(receiver)}
+                          disabled={!canActivate(receiver) || busyId === receiver.id}
                         >
-                          <Ban size={15} />
+                          <CircleCheck size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.iconBtnDanger}
+                          title={
+                            receiver.stage === 'suspended' || receiver.stage === 'blocked'
+                              ? 'Already suspended'
+                              : 'Suspend'
+                          }
+                          aria-label={`Suspend ${receiver.name}`}
+                          onClick={() => void onSuspend(receiver)}
+                          disabled={
+                            receiver.stage === 'suspended' ||
+                            receiver.stage === 'blocked' ||
+                            busyId === receiver.id
+                          }
+                        >
+                          <PauseCircle size={15} />
                         </button>
                       </div>
                     </td>
@@ -442,6 +557,16 @@ export function ReceiversPage() {
           </div>
         </section>
       </div>
+      <WarnModal
+        target={warnTarget}
+        appLabel="receiver's app"
+        send={(id, message) => updateReceiverStatus(id, 'warn', message)}
+        onClose={() => setWarnTarget(null)}
+        onSent={name => {
+          setWarnTarget(null);
+          setNotice(`Warning sent to ${name}.`);
+        }}
+      />
     </DashboardShell>
   );
 }

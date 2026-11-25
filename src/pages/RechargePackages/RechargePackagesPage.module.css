@@ -1,0 +1,251 @@
+.page {
+  display: grid;
+  gap: 16px;
+  max-width: 1100px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.primaryBtn {
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.errorBanner {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.noticeBanner {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+}
+
+.tableWrap {
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: #f9fafb;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--color-text);
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.emptyCell {
+  padding: 0 !important;
+  border-bottom: 0 !important;
+}
+
+.amount {
+  font-weight: 800;
+}
+
+.coins {
+  font-weight: 700;
+  color: var(--color-brand);
+}
+
+.statusActive,
+.statusInactive {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.statusActive {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.statusInactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.iconBtn,
+.iconBtnDanger {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand-ring);
+}
+
+.iconBtnDanger {
+  color: #dc2626;
+}
+
+.iconBtnDanger:hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.iconBtn:disabled,
+.iconBtnDanger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.4);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+  box-shadow: 0 20px 50px rgba(17, 24, 39, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.field input,
+.field select {
+  height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: #fff;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

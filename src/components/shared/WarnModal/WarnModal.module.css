@@ -1,0 +1,159 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(17, 24, 39, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modal {
+  width: min(100%, 460px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.2);
+  padding: 20px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.headText {
+  flex: 1;
+  min-width: 0;
+}
+
+.headText h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.headText p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.close {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.form {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 110px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+}
+
+.textarea[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+}
+
+.error {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.primary,
+.ghost {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  border: 0;
+  background: #d97706;
+  color: #fff;
+}
+
+.primary:disabled,
+.ghost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ghost {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-secondary);
+}

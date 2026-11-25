@@ -19,7 +19,7 @@ type AnalyticsPageProps = {
 
 const titles: Record<AnalyticsTabId, {title: string; subtitle: string}> = {
   overview: {
-    title: 'Enterprise Dashboard',
+    title: 'Dashboard',
     subtitle: "Real-time oversight of Callkaro's global ecosystem.",
   },
   packages: {

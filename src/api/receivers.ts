@@ -1,6 +1,22 @@
 import {apiRequest} from './client';
 
 export type ReceiverStatus = 'active' | 'inactive' | 'blocked';
+/** Raw backend Receiver.status. */
+export type ReceiverStatusKey =
+  | 'draft'
+  | 'pending_onboarding'
+  | 'pending_review'
+  | 'active'
+  | 'inactive'
+  | 'rejected';
+/** Admin display stage computed by the backend. */
+export type ReceiverStage =
+  | 'draft'
+  | 'pending'
+  | 'active'
+  | 'suspended'
+  | 'blocked'
+  | 'rejected';
 export type ReceiverPresence = 'online' | 'offline';
 
 export type AdminReceiverListItem = {
@@ -23,6 +39,8 @@ export type AdminReceiverListItem = {
   earnings: number;
   rank: number;
   status: ReceiverStatus;
+  statusKey?: ReceiverStatusKey;
+  stage?: ReceiverStage;
   presence: ReceiverPresence;
   topPerformer: boolean;
   idealProfile?: boolean;
@@ -34,6 +52,7 @@ export type AdminReceiverStats = {
   totalReceivers: number;
   onlineNow: number;
   offline: number;
+  suspended: number;
   blocked: number;
   totalRevenue: number;
   totalEarnings: number;
@@ -141,7 +160,7 @@ export async function fetchReceiver(id: string) {
 
 export async function updateReceiverStatus(
   id: string,
-  action: 'block' | 'suspend' | 'activate',
+  action: 'block' | 'suspend' | 'activate' | 'warn',
   reason?: string,
 ) {
   return apiRequest<{receiver: AdminReceiverProfile}>(

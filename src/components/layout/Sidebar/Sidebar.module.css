@@ -71,6 +71,35 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
+.group {
+  display: grid;
+  gap: 2px;
+}
+
+.childLink {
+  padding-left: 40px;
+  font-size: 13px;
+}
+
+.groupButton {
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.chevron {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
 .link:hover {
   background: #f9fafb;
   color: var(--color-text);

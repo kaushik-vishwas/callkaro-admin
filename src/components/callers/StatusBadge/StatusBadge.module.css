@@ -18,17 +18,8 @@
   color: #047857;
 }
 
-.inactive {
-  background: #ff2d78;
-  color: #fff;
-}
-
-.blocked {
-  background: #b91c1c;
-  color: #fff;
-}
-
+/* Suspended or blocked by an admin — same look as receivers */
 .suspended {
-  background: #f59e0b;
+  background: #ff2d78;
   color: #fff;
 }

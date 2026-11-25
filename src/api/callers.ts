@@ -120,7 +120,7 @@ export async function resetCallerPassword(id: string, newPassword?: string) {
 
 export async function updateCallerStatus(
   id: string,
-  action: 'block' | 'suspend' | 'activate' | 'unblock',
+  action: 'block' | 'suspend' | 'activate' | 'unblock' | 'warn',
   reason?: string,
 ) {
   return apiRequest<{caller: AdminCallerProfile}>(`/admin/callers/${id}`, {
