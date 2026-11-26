@@ -25,6 +25,8 @@ import {VipUsersPage} from './pages/Vip/VipUsersPage';
 import {VipUserDetailPage} from './pages/Vip/VipUserDetailPage';
 import {AnalyticsRoute} from './pages/Analytics/AnalyticsRoute';
 import {RechargePackagesPage} from './pages/RechargePackages/RechargePackagesPage';
+import {RewardCampaignsPage} from './pages/RewardCampaigns/RewardCampaignsPage';
+import {GiftsPage} from './pages/Gifts/GiftsPage';
 import {CallRatesPage} from './pages/CallRates/CallRatesPage';
 import {SubscriptionsPage} from './pages/Subscriptions/SubscriptionsPage';
 import {AnnouncementsPage} from './pages/Announcements/AnnouncementsPage';
@@ -254,6 +256,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <RechargePackagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reward-campaigns"
+            element={
+              <ProtectedRoute>
+                <RewardCampaignsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/gifts"
+            element={
+              <ProtectedRoute>
+                <GiftsPage />
               </ProtectedRoute>
             }
           />

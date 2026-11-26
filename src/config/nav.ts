@@ -17,6 +17,8 @@ import {
   Timer,
   CreditCard,
   Megaphone,
+  Gift,
+  Sparkles,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -60,6 +62,8 @@ export const adminNavItems: NavItem[] = [
   {id: 'withdrawals', label: 'Withdrawals', to: '/withdrawals', icon: Wallet, ready: true},
   {id: 'vip', label: 'VIP', to: '/vip', icon: Crown, ready: true},
   {id: 'recharge-packages', label: 'Recharge Packages', to: '/recharge-packages', icon: Package, ready: true},
+  {id: 'reward-campaigns', label: 'Recharge Campaigns', to: '/reward-campaigns', icon: Sparkles, ready: true},
+  {id: 'gifts', label: 'Gifts', to: '/gifts', icon: Gift, ready: true},
   {id: 'call-rates', label: 'Call Rates', to: '/call-rates', icon: Timer, ready: true},
   {id: 'subscriptions', label: 'Subscriptions', to: '/subscriptions', icon: CreditCard, ready: true},
   {id: 'announcements', label: 'Announcements', to: '/announcements', icon: Megaphone, ready: true},
