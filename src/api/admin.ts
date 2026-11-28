@@ -140,6 +140,13 @@ export async function fetchAdminHelp() {
   return apiRequest<{help: AdminHelpSupport}>('/admin/settings/help');
 }
 
+export function updateAdminHelp(input: AdminHelpSupport) {
+  return apiRequest<{help: AdminHelpSupport}>('/admin/settings/help', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+}
+
 export async function fetchAdminBank() {
   return apiRequest<{bank: AdminBankAccount; admin: Admin}>(
     '/admin/settings/bank',

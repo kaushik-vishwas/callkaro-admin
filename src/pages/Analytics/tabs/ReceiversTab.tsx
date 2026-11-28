@@ -83,7 +83,7 @@ export function ReceiversTab({rangeDays}: Props) {
               <th>Rank</th>
               <th>Receiver</th>
               <th>Calls Handled</th>
-              <th>Coins Earned</th>
+              <th>Total Earned Coins</th>
               <th>Revenue Generated</th>
               <th>Online Time</th>
               <th>Idle Time</th>

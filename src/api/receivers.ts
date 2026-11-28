@@ -34,7 +34,16 @@ export type AdminReceiverListItem = {
   agentId?: string;
   agentCommission: number;
   calls: number;
+  /** Total coins earned (calls + gifts). */
   coinsEarned: number;
+  /** Part of coinsEarned that came from gifts. */
+  giftCoinsEarned?: number;
+  /** Part of coinsEarned that came from calls. */
+  callCoinsEarned?: number;
+  /** Total completed call time, e.g. "4 min 5 sec". */
+  talkTimeLabel?: string;
+  /** Part of coinsEarned that came from chat messages. */
+  chatCoinsEarned?: number;
   revenue: number;
   earnings: number;
   rank: number;

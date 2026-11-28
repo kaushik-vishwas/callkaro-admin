@@ -124,3 +124,24 @@
   font-size: 12.5px;
   color: var(--color-text-muted);
 }
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.coinRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.coinLabel {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}

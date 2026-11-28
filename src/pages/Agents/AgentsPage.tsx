@@ -175,9 +175,9 @@ export function AgentsPage() {
             'Email',
             'Phone',
             'Receivers',
-            'Revenue',
-            'Commission',
-            'Pending',
+            'Receiver Earnings',
+            'Agent Earnings',
+            'Pending Payout',
             'Rank',
             'Status',
             'Joined',
@@ -364,9 +364,9 @@ export function AgentsPage() {
                   <th>Agent</th>
                   <th>Agent ID</th>
                   <th>Receivers</th>
-                  <th>Revenue</th>
-                  <th>Commission</th>
-                  <th>Pending</th>
+                  <th>Receiver Earnings</th>
+                  <th>Agent Earnings</th>
+                  <th>Pending Payout</th>
                   <th>Rank</th>
                   <th>Status</th>
                   <th>Actions</th>

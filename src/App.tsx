@@ -28,6 +28,7 @@ import {RechargePackagesPage} from './pages/RechargePackages/RechargePackagesPag
 import {RewardCampaignsPage} from './pages/RewardCampaigns/RewardCampaignsPage';
 import {GiftsPage} from './pages/Gifts/GiftsPage';
 import {CallRatesPage} from './pages/CallRates/CallRatesPage';
+import {MoneySettingsPage} from './pages/MoneySettings/MoneySettingsPage';
 import {SubscriptionsPage} from './pages/Subscriptions/SubscriptionsPage';
 import {AnnouncementsPage} from './pages/Announcements/AnnouncementsPage';
 import {IdentityMismatchPage} from './pages/Compliance/IdentityMismatchPage';
@@ -272,6 +273,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <GiftsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/money-settings"
+            element={
+              <ProtectedRoute>
+                <MoneySettingsPage />
               </ProtectedRoute>
             }
           />

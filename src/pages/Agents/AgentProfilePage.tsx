@@ -476,7 +476,7 @@ export function AgentProfilePage() {
                         <tr>
                           <th>Receiver</th>
                           <th>Calls</th>
-                          <th>Coins Earned</th>
+                          <th>Total Earned Coins</th>
                           <th>Revenue</th>
                           <th>Commission</th>
                           <th>Status</th>

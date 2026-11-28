@@ -358,7 +358,11 @@ export function ReceiversPage({view = 'all'}: {view?: 'all' | 'top'}) {
                   <th>Receiver ID</th>
                   <th>Assigned Agent</th>
                   <th>Calls</th>
-                  <th>Coins Earned</th>
+                  <th>Total Talk Time</th>
+                  <th>Total Earned Coins</th>
+                  <th>🪙 from Calls</th>
+                  <th>🪙 from Gifts</th>
+                  <th>🪙 from Chat</th>
                   {tab === 'ideal' ? <th>Online today</th> : null}
                   {tab === 'ideal' ? <th>Level</th> : null}
                   {tab !== 'ideal' ? <th>Revenue</th> : null}
@@ -372,7 +376,7 @@ export function ReceiversPage({view = 'all'}: {view?: 'all' | 'top'}) {
                 {!loading && rows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={tab === 'ideal' ? 11 : 10}
+                      colSpan={tab === 'ideal' ? 15 : 14}
                       className={styles.emptyCell}
                     >
                       <EmptyTableState
@@ -403,7 +407,13 @@ export function ReceiversPage({view = 'all'}: {view?: 'all' | 'top'}) {
                       </span>
                     </td>
                     <td>{formatNumber(receiver.calls)}</td>
-                    <td>{formatNumber(receiver.coinsEarned)}</td>
+                    <td>{receiver.talkTimeLabel ?? '0 sec'}</td>
+                    <td>
+                      {formatNumber(receiver.coinsEarned)}
+                    </td>
+                    <td>{formatNumber(receiver.callCoinsEarned ?? 0)}</td>
+                    <td>{formatNumber(receiver.giftCoinsEarned ?? 0)}</td>
+                    <td>{formatNumber(receiver.chatCoinsEarned ?? 0)}</td>
                     {tab === 'ideal' ? (
                       <td>
                         {(

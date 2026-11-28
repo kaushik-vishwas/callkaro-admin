@@ -376,9 +376,10 @@ export function ReceiverProfilePage() {
             <div className={styles.right}>
               <div className={styles.summaryRow}>
                 <article className={styles.summaryCard}>
-                  <p>Coins Earned</p>
+                  <p>Total Earned Coins</p>
                   <strong className={styles.pink}>
                     {formatNumber(profile.coinsEarned)}
+                    {` (${formatNumber(profile.giftCoinsEarned ?? 0)} from gifts)`}
                   </strong>
                 </article>
                 <article className={styles.summaryCard}>
